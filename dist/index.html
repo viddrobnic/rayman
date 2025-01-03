@@ -12,7 +12,8 @@
     <script type="module">
         async function main() {
             const wasm = await WebAssembly.instantiateStreaming(fetch('/rayman.wasm'), {});
-            const {memory, draw, get_screen} = wasm.instance.exports;
+            const {memory, draw, get_screen, init} = wasm.instance.exports;
+            init();
 
             const width = 1280;
             const height = 720;
