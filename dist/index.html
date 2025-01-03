@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>RayMan</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+</head>
+
+<body>
+    <canvas id="game-canvas" width="1280" height="720"></canvas>
+    <script type="module">
+        async function main() {
+            const wasm = await WebAssembly.instantiateStreaming(fetch('/rayman.wasm'), {});
+            const {memory, draw, get_screen} = wasm.instance.exports;
+
+            const width = 1280;
+            const height = 720;
+
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            let imageData = ctx.createImageData(width, height);
+            let screen = new Uint8Array(memory.buffer, get_screen(), width * height * 4);
+
+            let lastTime = performance.now();
+            function loop() {
+                const now = performance.now();
+                const elapsed = now - lastTime;
+                lastTime = now;
+                console.log(`fps: ${1000.0 / elapsed}`);
+
+                draw(now / 1000.0);
+                imageData.data.set(screen);
+                ctx.putImageData(imageData, 0, 0);
+
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        main()
+    </script>
+</body>
+
+</html>
