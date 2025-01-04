@@ -15,10 +15,10 @@ done
 # Ugly duplication build, but it works
 # and it's only two options...
 if [[ "$mode" == "debug" ]]; then
-    cargo build
+    cargo build --target wasm32-unknown-unknown
     cp target/wasm32-unknown-unknown/debug/rayman.wasm dist
 elif [[ "$mode" == "release" ]]; then
-    cargo build --release
+    cargo build --target wasm32-unknown-unknown --release
     cp target/wasm32-unknown-unknown/release/rayman.wasm dist
 fi
 

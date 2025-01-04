@@ -1,13 +1,15 @@
-mod color;
-mod game;
-mod vector;
-
 use color::Color;
 use game::Game;
 
-static WIDTH: usize = 1280;
-static HEIGHT: usize = 720;
-static mut SCREEN: [u8; 1280 * 720 * 4] = [0; 1280 * 720 * 4];
+mod color;
+mod game;
+mod texture;
+mod vector;
+
+const WIDTH: usize = 1280;
+const HEIGHT: usize = 720;
+const SCALE: usize = 2;
+static mut SCREEN: [u8; WIDTH * HEIGHT * 4] = [0; WIDTH * HEIGHT * 4];
 
 static mut GAME: Option<Game> = None;
 
@@ -39,6 +41,9 @@ pub extern "C" fn draw() {
 
 #[inline]
 fn draw_pixel(x: usize, y: usize, color: Color) {
+    debug_assert!(x < WIDTH, "x {x} out of bounds");
+    debug_assert!(y < HEIGHT, "y {y} out of bounds");
+
     let idx = (y * WIDTH + x) * 4;
     unsafe {
         SCREEN[idx] = color.red;
