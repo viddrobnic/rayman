@@ -1,9 +1,14 @@
+use std::f32::consts::PI;
+
 use crate::texture::TextureManager;
 use crate::vector::Vec2;
 use level::Level;
 
 mod level;
 mod render;
+
+const SPEED: f32 = 1.8;
+const ROTATION_SPEED: f32 = 1.8;
 
 #[derive(Debug)]
 pub struct Game {
@@ -25,5 +30,10 @@ impl Game {
 
             textures: TextureManager::new(),
         }
+    }
+
+    pub fn update(&mut self, dt: f32) {
+        self.player_rot += ROTATION_SPEED * dt / 3.0;
+        self.player_rot = self.player_rot.rem_euclid(PI);
     }
 }

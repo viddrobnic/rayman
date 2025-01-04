@@ -39,6 +39,17 @@ pub extern "C" fn draw() {
     }
 }
 
+#[no_mangle]
+pub extern "C" fn update(dt: f32) {
+    unsafe {
+        #[allow(static_mut_refs)]
+        match &mut GAME {
+            None => panic!("Game not initialized"),
+            Some(game) => game.update(dt),
+        }
+    }
+}
+
 #[inline]
 fn draw_pixel(x: usize, y: usize, color: Color) {
     debug_assert!(x < WIDTH, "x {x} out of bounds");

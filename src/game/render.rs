@@ -30,9 +30,15 @@ impl Game {
                 let step = x as f32 / WIDTH as f32;
                 let pos = left + diff.scalar_mul(step);
 
-                let black = Color::new(0, 0, 0);
                 let tile = self.level.get_tile(pos.x as usize, pos.y as usize);
-                let (floor_color, ceil_color) = tile.map_or((black, black), |tile| match tile {
+                let Some(tile) = tile else {
+                    // We don't have to render floor/ceiling outside of the level,
+                    // since levels are bounded by walls and the floor is not visible
+                    // outside of the level.
+                    continue;
+                };
+
+                let (floor_color, ceil_color) = match tile {
                     super::level::Tile::Empty { floor, ceiling } => {
                         let floor_text = self.textures.get_texture(*floor);
                         let ceil_text = self.textures.get_texture(*ceiling);
@@ -42,8 +48,8 @@ impl Game {
 
                         (f_c, c_c)
                     }
-                    super::level::Tile::Wall => (black, black),
-                });
+                    super::level::Tile::Wall => (Color::new(0, 0, 0), Color::new(0, 0, 0)),
+                };
 
                 for dy in 0..SCALE {
                     for dx in 0..SCALE {
