@@ -1,38 +1,40 @@
+use std::ops::{Add, Mul, Neg, Sub};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Vec2 {
-    pub x: f32,
-    pub y: f32,
+pub struct Vec2<T> {
+    pub x: T,
+    pub y: T,
 }
 
-impl Vec2 {
-    pub fn new(x: f32, y: f32) -> Self {
+impl<T> Vec2<T> {
+    pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
+}
 
-    pub fn zero() -> Self {
-        Self::new(0.0, 0.0)
-    }
-
-    pub fn from_polar(angle: f32) -> Self {
-        Self::new(angle.cos(), angle.sin())
-    }
-
+impl<T: Mul<Output = T> + Neg<Output = T> + Copy> Vec2<T> {
     pub fn rotate_90(&self) -> Self {
         Self::new(-self.y, self.x)
     }
 
-    pub fn scalar_mul(&self, scalar: f32) -> Self {
+    pub fn scalar_mul(&self, scalar: T) -> Self {
         Self::new(self.x * scalar, self.y * scalar)
     }
 }
 
-impl Default for Vec2 {
+impl<T: Default> Default for Vec2<T> {
     fn default() -> Self {
-        Self::zero()
+        Self::new(T::default(), T::default())
     }
 }
 
-impl core::ops::Add for Vec2 {
+impl Vec2<f32> {
+    pub fn from_polar(angle: f32) -> Self {
+        Self::new(angle.cos(), angle.sin())
+    }
+}
+
+impl<T: Add<Output = T>> Add for Vec2<T> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
@@ -43,7 +45,7 @@ impl core::ops::Add for Vec2 {
     }
 }
 
-impl core::ops::Sub for Vec2 {
+impl<T: Sub<Output = T>> Sub for Vec2<T> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {

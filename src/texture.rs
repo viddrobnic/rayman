@@ -40,12 +40,14 @@ impl Texture {
 pub enum TextureId {
     Floor1,
     Floor2,
+    Green,
 }
 
 #[derive(Debug)]
 pub struct TextureManager {
     floor1: Texture,
     floor2: Texture,
+    green: Texture,
 }
 
 impl TextureManager {
@@ -53,6 +55,7 @@ impl TextureManager {
         Self {
             floor1: Color::new(0x44, 0x44, 0x44).into(),
             floor2: Color::new(0x66, 0x66, 0x66).into(),
+            green: Color::new(0, 0xff, 0).into(),
         }
     }
 
@@ -60,6 +63,7 @@ impl TextureManager {
         match id {
             TextureId::Floor1 => &self.floor1,
             TextureId::Floor2 => &self.floor2,
+            TextureId::Green => &self.green,
         }
     }
 }

@@ -9,10 +9,11 @@ const CAMERA_WIDTH: f32 = 1.0;
 impl Game {
     pub fn draw(&self) {
         self.draw_floor_ceil();
+        self.draw_walls();
     }
 
     fn draw_floor_ceil(&self) {
-        let camera_direction = Vec2::from_polar(self.player_rot);
+        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
         let camera_plane = camera_direction.rotate_90();
 
         for y in (0..HEIGHT / 2).step_by(SCALE) {
@@ -48,7 +49,7 @@ impl Game {
 
                         (f_c, c_c)
                     }
-                    super::level::Tile::Wall => (Color::new(0, 0, 0), Color::new(0, 0, 0)),
+                    super::level::Tile::Wall { .. } => (Color::new(0, 0, 0), Color::new(0, 0, 0)),
                 };
 
                 for dy in 0..SCALE {
@@ -62,5 +63,10 @@ impl Game {
                 }
             }
         }
+    }
+
+    fn draw_walls(&self) {
+        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
+        let camera_plane = camera_direction.rotate_90();
     }
 }

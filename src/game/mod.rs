@@ -12,7 +12,7 @@ const ROTATION_SPEED: f32 = 1.8;
 
 #[derive(Debug)]
 pub struct Game {
-    player_pos: Vec2,
+    player_pos: Vec2<f32>,
     player_rot: f32,
 
     level: Level,
