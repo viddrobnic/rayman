@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec2<T> {
@@ -32,6 +32,10 @@ impl Vec2<f32> {
     pub fn from_polar(angle: f32) -> Self {
         Self::new(angle.cos(), angle.sin())
     }
+
+    pub fn length(&self) -> f32 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
 }
 
 impl<T: Add<Output = T>> Add for Vec2<T> {
@@ -42,6 +46,13 @@ impl<T: Add<Output = T>> Add for Vec2<T> {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
         }
+    }
+}
+
+impl<T: AddAssign> AddAssign for Vec2<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
