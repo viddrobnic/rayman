@@ -1,2 +1,3 @@
-# rayman
-3D pacman done with raycasting.
+# RayMan
+
+Simple web game done using a custom raycasting engine.
