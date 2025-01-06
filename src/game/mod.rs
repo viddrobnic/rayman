@@ -34,6 +34,6 @@ impl Game {
 
     pub fn update(&mut self, dt: f32) {
         self.player_rot += ROTATION_SPEED * dt / 3.0;
-        self.player_rot = self.player_rot.rem_euclid(PI);
+        self.player_rot = self.player_rot.rem_euclid(2.0 * PI);
     }
 }

@@ -15,4 +15,12 @@ impl Color {
             alpha: 255,
         }
     }
+
+    pub fn darken(&mut self, factor: f32) {
+        debug_assert!(factor <= 1.0);
+
+        self.red = (self.red as f32 * factor) as u8;
+        self.green = (self.green as f32 * factor) as u8;
+        self.blue = (self.blue as f32 * factor) as u8;
+    }
 }

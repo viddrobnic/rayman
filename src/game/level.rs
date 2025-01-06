@@ -8,27 +8,30 @@ pub struct Level {
 }
 
 #[derive(Debug)]
+pub struct Wall {
+    pub north: TextureId,
+    pub south: TextureId,
+    pub east: TextureId,
+    pub west: TextureId,
+}
+
+#[derive(Debug)]
 pub enum Tile {
     Empty {
         floor: TextureId,
         ceiling: TextureId,
     },
-    Wall {
-        north: TextureId,
-        south: TextureId,
-        east: TextureId,
-        west: TextureId,
-    },
+    Wall(Wall),
 }
 
 impl Tile {
     pub fn new_wall(texture_id: TextureId) -> Self {
-        Self::Wall {
+        Self::Wall(Wall {
             north: texture_id,
             south: texture_id,
             east: texture_id,
             west: texture_id,
-        }
+        })
     }
 }
 
@@ -292,10 +295,12 @@ impl Level {
                     floor: TextureId::Floor2,
                     ceiling: TextureId::Floor1,
                 },
-                Tile::Empty {
-                    floor: TextureId::Floor1,
-                    ceiling: TextureId::Floor2,
-                },
+                Tile::Wall(Wall {
+                    north: TextureId::Green,
+                    south: TextureId::Blue,
+                    east: TextureId::Red,
+                    west: TextureId::Pink,
+                }),
                 Tile::Empty {
                     floor: TextureId::Floor2,
                     ceiling: TextureId::Floor1,

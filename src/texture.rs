@@ -41,6 +41,9 @@ pub enum TextureId {
     Floor1,
     Floor2,
     Green,
+    Blue,
+    Red,
+    Pink,
 }
 
 #[derive(Debug)]
@@ -48,6 +51,9 @@ pub struct TextureManager {
     floor1: Texture,
     floor2: Texture,
     green: Texture,
+    blue: Texture,
+    red: Texture,
+    pink: Texture,
 }
 
 impl TextureManager {
@@ -56,6 +62,9 @@ impl TextureManager {
             floor1: Color::new(0x44, 0x44, 0x44).into(),
             floor2: Color::new(0x66, 0x66, 0x66).into(),
             green: Color::new(0, 0xff, 0).into(),
+            blue: Color::new(0, 0, 0xff).into(),
+            red: Color::new(0xff, 0, 0).into(),
+            pink: Color::new(0xff, 0, 0xff).into(),
         }
     }
 
@@ -64,6 +73,9 @@ impl TextureManager {
             TextureId::Floor1 => &self.floor1,
             TextureId::Floor2 => &self.floor2,
             TextureId::Green => &self.green,
+            TextureId::Blue => &self.blue,
+            TextureId::Red => &self.red,
+            TextureId::Pink => &self.pink,
         }
     }
 }

@@ -2,10 +2,10 @@ use crate::color::Color;
 use crate::vector::Vec2;
 use crate::{draw_pixel, HEIGHT, SCALE, WIDTH};
 
-use super::level::Tile;
+use super::level::{Tile, Wall};
 use super::Game;
 
-const CAMERA_WIDTH: f32 = 1.0;
+const CAMERA_WIDTH: f32 = 0.8;
 
 impl Game {
     pub fn draw(&self) {
@@ -83,8 +83,8 @@ impl Game {
             let ray_direction =
                 Vec2::new(ray.x.total_cmp(&0.0) as i32, ray.y.total_cmp(&0.0) as i32);
 
-            // Wall that the ray hit.
-            let mut wall = None;
+            // Wall that the ray hit and from which direction it hit.
+            let mut collision_info = None;
 
             // Make sure to not take too many steps.
             for _step in 0..100 {
@@ -94,14 +94,17 @@ impl Game {
 
                 let step_factor;
                 let tile_step;
+                let hit_direction;
                 if step_factor_x < step_factor_y {
                     // Move to the next tile in horizontal direction
                     step_factor = step_factor_x;
                     tile_step = Vec2::new(ray_direction.x, 0);
+                    hit_direction = HitDirection::Horizontal;
                 } else {
                     // Move to the next tile in vertical direction
                     step_factor = step_factor_y;
                     tile_step = Vec2::new(0, ray_direction.y);
+                    hit_direction = HitDirection::Vertical;
                 }
 
                 // Update tile coordinates.
@@ -123,44 +126,79 @@ impl Game {
                 let tile = self
                     .level
                     .get_tile(tile_idx.x as usize, tile_idx.y as usize);
-                if matches!(tile, Some(Tile::Wall { .. })) {
-                    wall = tile;
+
+                if let Some(Tile::Wall(wall)) = tile {
+                    collision_info = Some(CollisionInfo {
+                        wall,
+                        hit_direction,
+                    });
                     break;
                 }
             }
 
             // Check that we hit a wall.
-            let Some(wall) = wall else {
+            let Some(collision_info) = collision_info else {
                 continue;
             };
 
-            // Calculate the point of collision with the wall.
+            // Calculate the height of the column.
             let collision = Vec2 {
                 x: tile_idx.x as f32 + tile_rem.x,
                 y: tile_idx.y as f32 + tile_rem.y,
             };
-
-            // Calculate the height of the column.
             let distance = distance_from_camera(self.player_pos, camera_plane, collision);
-            let height = (HEIGHT as f32 / distance).min(HEIGHT as f32);
-            let height = height as usize;
 
-            // Get the color based on the direction.
-            let color = match wall {
-                Tile::Empty { .. } => unreachable!(),
-                // TODO: Get the real color based on level config.
-                Tile::Wall { .. } => Color::new(255, 0, 0),
-            };
+            // Draw the column
+            self.draw_wall_column(x, collision_info, distance, ray_direction);
+        }
+    }
 
-            let start_y = HEIGHT / 2 - height / 2;
-            let end_y = start_y + height;
-            for dx in 0..SCALE {
-                for y in start_y..end_y {
-                    draw_pixel(x + dx, y, color);
-                }
+    fn draw_wall_column(
+        &self,
+        x: usize,
+        collision_info: CollisionInfo,
+        distance: f32,
+        ray_direction: Vec2<i32>,
+    ) {
+        let height = (HEIGHT as f32 / distance).min(HEIGHT as f32);
+        let height = height as usize;
+
+        // Get the color
+        let wall = collision_info.wall;
+        let texture_id = match collision_info.hit_direction {
+            HitDirection::Horizontal if ray_direction.x == -1 => wall.east,
+            HitDirection::Horizontal if ray_direction.x == 1 => wall.west,
+            HitDirection::Vertical if ray_direction.y == -1 => wall.north,
+            HitDirection::Vertical if ray_direction.y == 1 => wall.south,
+            _ => unreachable!(),
+        };
+        let texture = self.textures.get_texture(texture_id);
+
+        // Use correct texture coordinate
+        let mut color = texture.get_pixel(0.0, 0.0);
+        if collision_info.hit_direction == HitDirection::Horizontal {
+            color.darken(0.8);
+        }
+
+        let start_y = HEIGHT / 2 - height / 2;
+        let end_y = start_y + height;
+        for dx in 0..SCALE {
+            for y in start_y..end_y {
+                draw_pixel(x + dx, y, color);
             }
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HitDirection {
+    Horizontal,
+    Vertical,
+}
+
+struct CollisionInfo<'a> {
+    wall: &'a Wall,
+    hit_direction: HitDirection,
 }
 
 // Auxiliary function to calculate the step factor for moving to the next tile
