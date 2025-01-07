@@ -11,3 +11,4 @@ name = "rayman-bin"
 path = "src/main.rs"
 
 [dependencies]
+image = "0.25.5"

@@ -1,3 +1,4 @@
 /target
-/dist/rayman.wasm
+/dist/rayman_bg.wasm
+/dist/rayman.js
 .DS_Store

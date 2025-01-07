@@ -16,9 +16,9 @@ done
 # and it's only two options...
 if [[ "$mode" == "debug" ]]; then
     cargo build --target wasm32-unknown-unknown
-    cp target/wasm32-unknown-unknown/debug/rayman.wasm dist
+    wasm-bindgen target/wasm32-unknown-unknown/debug/rayman.wasm --out-dir ./dist --target=web --no-typescript
 elif [[ "$mode" == "release" ]]; then
     cargo build --target wasm32-unknown-unknown --release
-    cp target/wasm32-unknown-unknown/release/rayman.wasm dist
+    wasm-bindgen target/wasm32-unknown-unknown/release/rayman.wasm --out-dir ./dist --target=web --no-typescript
 fi
 

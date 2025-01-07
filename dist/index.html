@@ -10,10 +10,11 @@
 <body>
     <canvas id="game-canvas" width="1280" height="720"></canvas>
     <script type="module">
+        import init from './rayman.js';
         async function main() {
-            const wasm = await WebAssembly.instantiateStreaming(fetch('/rayman.wasm'), {});
-            const {memory, draw, update, get_screen, init} = wasm.instance.exports;
-            init();
+            const wasm = await init();
+            const {memory, draw, update, get_screen, init: initGame} = wasm;
+            initGame();
 
             const width = 1280;
             const height = 720;

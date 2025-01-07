@@ -1,4 +1,10 @@
+use std::io::Cursor;
+
+use image::ImageReader;
+
 use crate::color::Color;
+
+static COBBLE_TEXTURE: &[u8] = include_bytes!("../assets/block.jpg");
 
 #[derive(Debug)]
 pub struct Texture {
@@ -57,12 +63,27 @@ pub struct TextureManager {
 
 impl TextureManager {
     pub fn new() -> Self {
+        let image = ImageReader::new(Cursor::new(COBBLE_TEXTURE))
+            .with_guessed_format()
+            .unwrap()
+            .decode()
+            .unwrap();
+        let image_pixels: Vec<_> = image
+            .as_rgb8()
+            .unwrap()
+            .pixels()
+            .map(|pixel| Color {
+                red: pixel[0],
+                green: pixel[1],
+                blue: pixel[2],
+                alpha: 255,
+            })
+            .collect();
+
         let gradient = Texture {
-            width: 256,
-            height: 1,
-            pixels: (0..256)
-                .map(|i| Color::new(i as u8, i as u8, i as u8))
-                .collect(),
+            width: image.width() as usize,
+            height: image.height() as usize,
+            pixels: image_pixels,
         };
 
         Self {

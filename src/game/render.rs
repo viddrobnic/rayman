@@ -188,11 +188,11 @@ impl Game {
         let end_y = start_y + height;
         for dx in 0..SCALE {
             for y in start_y..end_y {
-                let texture_y = y as f32 / (end_y as f32 - start_y as f32);
+                let texture_y = (y - start_y) as f32 / (end_y as f32 - start_y as f32);
                 let mut color = texture.get_pixel(texture_x, texture_y);
 
                 if collision_info.hit_direction == HitDirection::Horizontal {
-                    color.darken(0.8);
+                    color.darken(0.5);
                 }
 
                 draw_pixel(x + dx, y, color);
