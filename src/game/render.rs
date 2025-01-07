@@ -148,8 +148,17 @@ impl Game {
             };
             let distance = distance_from_camera(self.player_pos, camera_plane, collision);
 
+            let texture_x = match collision_info.hit_direction {
+                HitDirection::Horizontal => tile_rem.y,
+                HitDirection::Vertical => tile_rem.x,
+            };
+            debug_assert!(
+                (0.0..=1.0).contains(&texture_x),
+                "texture coordinate out of bounds: {texture_x}"
+            );
+
             // Draw the column
-            self.draw_wall_column(x, collision_info, distance, ray_direction);
+            self.draw_wall_column(x, collision_info, texture_x, distance, ray_direction);
         }
     }
 
@@ -157,6 +166,7 @@ impl Game {
         &self,
         x: usize,
         collision_info: CollisionInfo,
+        texture_x: f32,
         distance: f32,
         ray_direction: Vec2<i32>,
     ) {
@@ -174,16 +184,17 @@ impl Game {
         };
         let texture = self.textures.get_texture(texture_id);
 
-        // Use correct texture coordinate
-        let mut color = texture.get_pixel(0.0, 0.0);
-        if collision_info.hit_direction == HitDirection::Horizontal {
-            color.darken(0.8);
-        }
-
         let start_y = HEIGHT / 2 - height / 2;
         let end_y = start_y + height;
         for dx in 0..SCALE {
             for y in start_y..end_y {
+                let texture_y = y as f32 / (end_y as f32 - start_y as f32);
+                let mut color = texture.get_pixel(texture_x, texture_y);
+
+                if collision_info.hit_direction == HitDirection::Horizontal {
+                    color.darken(0.8);
+                }
+
                 draw_pixel(x + dx, y, color);
             }
         }

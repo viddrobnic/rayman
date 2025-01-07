@@ -297,9 +297,9 @@ impl Level {
                 },
                 Tile::Wall(Wall {
                     north: TextureId::Green,
-                    south: TextureId::Blue,
+                    south: TextureId::Gradient,
                     east: TextureId::Red,
-                    west: TextureId::Pink,
+                    west: TextureId::Gradient,
                 }),
                 Tile::Empty {
                     floor: TextureId::Floor2,
