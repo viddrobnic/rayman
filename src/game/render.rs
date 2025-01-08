@@ -170,8 +170,14 @@ impl Game {
         distance: f32,
         ray_direction: Vec2<i32>,
     ) {
-        let height = (HEIGHT as f32 / distance).min(HEIGHT as f32);
-        let height = height as usize;
+        let real_hight = HEIGHT as f32 / distance;
+        let height = real_hight.min(HEIGHT as f32) as usize;
+
+        let texture_offset = if real_hight > HEIGHT as f32 {
+            (real_hight - HEIGHT as f32) / real_hight / 2.0
+        } else {
+            0.0
+        };
 
         // Get the color
         let wall = collision_info.wall;
@@ -188,7 +194,7 @@ impl Game {
         let end_y = start_y + height;
         for dx in 0..SCALE {
             for y in start_y..end_y {
-                let texture_y = (y - start_y) as f32 / (end_y as f32 - start_y as f32);
+                let texture_y = (y - start_y) as f32 / real_hight + texture_offset;
                 let mut color = texture.get_pixel(texture_x, texture_y);
 
                 if collision_info.hit_direction == HitDirection::Horizontal {
