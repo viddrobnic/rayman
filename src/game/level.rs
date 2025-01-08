@@ -292,8 +292,8 @@ impl Level {
                     ceiling: TextureId::Floor2,
                 },
                 Tile::Empty {
-                    floor: TextureId::Floor2,
-                    ceiling: TextureId::Floor1,
+                    floor: TextureId::Gradient,
+                    ceiling: TextureId::Gradient,
                 },
                 Tile::Wall(Wall {
                     north: TextureId::Green,

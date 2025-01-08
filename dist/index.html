@@ -11,6 +11,49 @@
     <canvas id="game-canvas" width="1280" height="720"></canvas>
     <script type="module">
         import init from './rayman.js';
+
+        // Handle key presses
+        const pressed_keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+        }
+        document.onkeydown = function (e) {
+            switch (e.key) {
+                case 'w':
+                    pressed_keys.w = true;
+                    break
+                case 'a':
+                    pressed_keys.a = true;
+                    break
+                case 's':
+                    pressed_keys.s = true;
+                    break
+                case 'd':
+                    pressed_keys.d = true;
+                    break
+            }
+        };
+
+        document.onkeyup = function (e) {
+            switch (e.key) {
+                case 'w':
+                    pressed_keys.w = false;
+                    break
+                case 'a':
+                    pressed_keys.a = false;
+                    break
+                case 's':
+                    pressed_keys.s = false;
+                    break
+                case 'd':
+                    pressed_keys.d = false;
+                    break
+            }
+        }
+
+        // Main function to load wasm and render stuff
         async function main() {
             const wasm = await init();
             const {memory, draw, update, get_screen, init: initGame} = wasm;
@@ -23,6 +66,7 @@
             const ctx = canvas.getContext('2d');
             let imageData = ctx.createImageData(width, height);
             let screen = new Uint8Array(memory.buffer, get_screen(), width * height * 4);
+
 
             let lastTime = performance.now();
             let frameCount = 0;
@@ -41,7 +85,7 @@
                 }
                 frameCount++;
 
-                update(elapsed / 1000.0);
+                update(elapsed / 1000.0, pressed_keys.w, pressed_keys.a, pressed_keys.s, pressed_keys.d);
                 draw(now / 1000.0);
                 imageData.data.set(screen);
                 ctx.putImageData(imageData, 0, 0);

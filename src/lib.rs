@@ -1,5 +1,5 @@
 use color::Color;
-use game::Game;
+use game::{Game, UpdateEvent};
 
 mod color;
 mod game;
@@ -40,12 +40,26 @@ pub extern "C" fn draw() {
 }
 
 #[no_mangle]
-pub extern "C" fn update(dt: f32) {
+pub extern "C" fn update(
+    dt: f32,
+    w_pressed: bool,
+    a_pressed: bool,
+    s_pressed: bool,
+    d_pressed: bool,
+) {
+    let event = UpdateEvent {
+        dt,
+        w_pressed,
+        a_pressed,
+        s_pressed,
+        d_pressed,
+    };
+
     unsafe {
         #[allow(static_mut_refs)]
         match &mut GAME {
             None => panic!("Game not initialized"),
-            Some(game) => game.update(dt),
+            Some(game) => game.update(event),
         }
     }
 }
