@@ -5,7 +5,8 @@ use crate::{draw_pixel, HEIGHT, SCALE, WIDTH};
 use super::level::{Tile, Wall};
 use super::Game;
 
-const CAMERA_WIDTH: f32 = 0.8;
+const CAMERA_WIDTH: f32 = 1.0;
+const CAMERA_HEIGHT: f32 = 1.0;
 
 impl Game {
     pub fn draw(&self) {
@@ -19,7 +20,7 @@ impl Game {
 
         for y in (0..HEIGHT / 2).step_by(SCALE) {
             let camera_factor = 1.0 - 2.0 * (y as f32 / HEIGHT as f32);
-            let t = 1.0 / camera_factor;
+            let t = CAMERA_HEIGHT / camera_factor;
 
             let left = self.player_pos
                 + (camera_direction + camera_plane.scalar_mul(CAMERA_WIDTH)).scalar_mul(t);
@@ -170,7 +171,7 @@ impl Game {
         distance: f32,
         ray_direction: Vec2<i32>,
     ) {
-        let real_hight = HEIGHT as f32 / distance;
+        let real_hight = HEIGHT as f32 / distance * CAMERA_HEIGHT;
         let height = real_hight.min(HEIGHT as f32) as usize;
 
         let texture_offset = if real_hight > HEIGHT as f32 {

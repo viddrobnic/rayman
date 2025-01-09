@@ -10,6 +10,8 @@ mod render;
 const SPEED: f32 = 1.8;
 const ROTATION_SPEED: f32 = 1.8;
 
+const PLAYER_BOUND_MARGIN: f32 = 0.1;
+
 #[derive(Debug)]
 pub struct Game {
     player_pos: Vec2<f32>,
@@ -65,12 +67,19 @@ impl Game {
             return;
         };
 
+        let move_direction = Vec2 {
+            x: move_vec.x.total_cmp(&0.0) as i32 as f32,
+            y: move_vec.y.total_cmp(&0.0) as i32 as f32,
+        };
+
         let mut new_pos = self.player_pos;
 
         // Move x
         if matches!(
-            self.level
-                .get_tile((new_pos.x + move_vec.x) as usize, new_pos.y as usize,),
+            self.level.get_tile(
+                (new_pos.x + move_vec.x + move_direction.x * PLAYER_BOUND_MARGIN) as usize,
+                new_pos.y as usize,
+            ),
             Some(Tile::Empty { .. })
         ) {
             new_pos.x += move_vec.x;
@@ -78,8 +87,10 @@ impl Game {
 
         // Move y
         if matches!(
-            self.level
-                .get_tile(new_pos.x as usize, (new_pos.y + move_vec.y) as usize,),
+            self.level.get_tile(
+                new_pos.x as usize,
+                (new_pos.y + move_vec.y + move_direction.y * PLAYER_BOUND_MARGIN) as usize,
+            ),
             Some(Tile::Empty { .. })
         ) {
             new_pos.y += move_vec.y;
