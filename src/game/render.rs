@@ -1,4 +1,5 @@
 use crate::color::Color;
+use crate::entity::Entity;
 use crate::vector::Vec2;
 use crate::{draw_pixel, HEIGHT, SCALE, WIDTH};
 
@@ -12,6 +13,7 @@ impl Game {
     pub fn draw(&self) {
         self.draw_floor_ceil();
         self.draw_walls();
+        self.draw_sprites();
     }
 
     fn draw_floor_ceil(&self) {
@@ -163,6 +165,63 @@ impl Game {
         }
     }
 
+    fn draw_sprites(&self) {
+        for sprite in &self.sprites {
+            self.draw_sprite(&**sprite);
+        }
+    }
+
+    fn draw_sprite(&self, entity: &dyn Entity) {
+        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
+        let camera_plane = camera_direction.rotate_90();
+
+        // Vector between player position and entity.
+        let diff = entity.get_position() - self.player_pos;
+
+        // Check if entity is in the direction the player is looking.
+        // If it's on the other side of the camera, we don't need to render it.
+        if camera_direction.dot_product(&diff) <= 0.0 {
+            return;
+        }
+
+        let Some(x) = get_entity_screen_x(&camera_direction, &camera_plane, &diff) else {
+            return;
+        };
+
+        // Calculate distance from camera.
+        let distance = distance_from_camera(self.player_pos, camera_plane, entity.get_position());
+
+        // Calculate width and height on screen
+        let size = entity.get_size();
+        let width = (size.x * WIDTH as f32 / distance) as usize;
+        let height = (size.y * HEIGHT as f32 / distance) as usize;
+
+        let start_x = (x - width / 2).max(0);
+        let end_x = (start_x + width).min(WIDTH);
+
+        let wall_height = HEIGHT as f32 / distance * CAMERA_HEIGHT;
+        let wall_height = wall_height.min(HEIGHT as f32) as usize;
+
+        let offset = entity.get_floor_offset() * wall_height as f32;
+        let offset = offset as usize;
+        let end_y = HEIGHT / 2 + wall_height / 2 - offset + height / 2;
+        let end_y = end_y.min(HEIGHT);
+        let start_y = (end_y - height).max(0);
+
+        let texture = self.textures.get_texture(entity.get_texture_id());
+        for x in (start_x..end_x).step_by(SCALE) {
+            for y in (start_y..end_y).step_by(SCALE) {
+                let color = texture.get_pixel(0.0, 0.0);
+
+                for dx in 0..SCALE {
+                    for dy in 0..SCALE {
+                        draw_pixel(x + dx, y + dy, color);
+                    }
+                }
+            }
+        }
+    }
+
     fn draw_wall_column(
         &self,
         x: usize,
@@ -193,15 +252,14 @@ impl Game {
 
         let start_y = HEIGHT / 2 - height / 2;
         let end_y = start_y + height;
-        for dx in 0..SCALE {
-            for y in start_y..end_y {
-                let texture_y = (y - start_y) as f32 / real_hight + texture_offset;
-                let mut color = texture.get_pixel(texture_x, texture_y);
+        for y in start_y..end_y {
+            let texture_y = (y - start_y) as f32 / real_hight + texture_offset;
+            let mut color = texture.get_pixel(texture_x, texture_y);
+            if collision_info.hit_direction == HitDirection::Horizontal {
+                color.darken(0.5);
+            }
 
-                if collision_info.hit_direction == HitDirection::Horizontal {
-                    color.darken(0.5);
-                }
-
+            for dx in 0..SCALE {
                 draw_pixel(x + dx, y, color);
             }
         }
@@ -252,4 +310,39 @@ fn distance_from_camera(position: Vec2<f32>, direction: Vec2<f32>, point: Vec2<f
     let denum = direction.length();
 
     numerator.abs() / denum
+}
+
+// Calculates x in screen coordinates [0, WIDTH]
+fn get_entity_screen_x(
+    camera_direction: &Vec2<f32>,
+    camera_plane: &Vec2<f32>,
+    entity: &Vec2<f32>,
+) -> Option<usize> {
+    // Calculate x in camera coordinates, x in [-CAMERA_WIDTH, CAMERA_WIDTH].
+    // diff = t * (camera_dir + camera_x * camera_plane)
+    // diff x t * (camera_dir + camera_x * camera_plane) = 0  where x is cross product
+    // diff x camera_dir + camera_x * diff x camera_plane = 0
+    //
+    // Because all vector are 2d, cross product will give us 3d vector (0, 0, w).
+    // In the following final formula, we are using cross product notation, but
+    // have in mind, that values are actually scalars (third component in cross product).
+    //
+    // camera_x = -(diff x camera_dir) / (diff x camera_plane)
+    let denumenator = entity.x * camera_plane.y - entity.y * camera_plane.x;
+    if denumenator == 0.0 {
+        // If sprite is on the camera plane, we have division by 0.
+        return None;
+    }
+
+    let numerator = entity.x * camera_direction.y - entity.y * camera_direction.x;
+    let camera_x = numerator / denumenator;
+
+    // Check camera_x is in field of view.
+    if !(-CAMERA_WIDTH..=CAMERA_WIDTH).contains(&camera_x) {
+        return None;
+    }
+
+    // Transform x into pixel coordinates [0, WIDTH]
+    let x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * WIDTH as f32;
+    Some(x as usize)
 }

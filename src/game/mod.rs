@@ -1,7 +1,8 @@
 use std::f32::consts::PI;
 
-use crate::texture::TextureManager;
+use crate::entity::DummyEntity;
 use crate::vector::Vec2;
+use crate::{entity::Entity, texture::TextureManager};
 use level::{Level, Tile};
 
 mod level;
@@ -18,7 +19,7 @@ pub struct Game {
     player_rot: f32,
 
     level: Level,
-
+    sprites: Vec<Box<dyn Entity>>,
     textures: TextureManager,
 }
 
@@ -35,9 +36,10 @@ impl Game {
     pub fn new() -> Self {
         Self {
             player_pos: Vec2::new(5.0, 5.0),
-            player_rot: 0.0,
+            player_rot: 4.0,
 
             level: Level::one(),
+            sprites: vec![Box::new(DummyEntity {})],
 
             textures: TextureManager::new(),
         }

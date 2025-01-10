@@ -2,6 +2,7 @@ use color::Color;
 use game::{Game, UpdateEvent};
 
 mod color;
+mod entity;
 mod game;
 mod texture;
 mod vector;

@@ -22,6 +22,12 @@ impl<T: Mul<Output = T> + Neg<Output = T> + Copy> Vec2<T> {
     }
 }
 
+impl<T: Mul<Output = T> + Add<Output = T> + Copy> Vec2<T> {
+    pub fn dot_product(&self, other: &Vec2<T>) -> T {
+        self.x * other.x + self.y * other.y
+    }
+}
+
 impl<T: Default> Default for Vec2<T> {
     fn default() -> Self {
         Self::new(T::default(), T::default())
