@@ -176,29 +176,35 @@ impl Game {
         let camera_plane = camera_direction.rotate_90();
 
         // Vector between player position and entity.
-        let diff = entity.get_position() - self.player_pos;
+        let entity_vec = entity.get_position() - self.player_pos;
+        let size = entity.get_size();
 
-        // Check if entity is in the direction the player is looking.
-        // If it's on the other side of the camera, we don't need to render it.
-        if camera_direction.dot_product(&diff) <= 0.0 {
-            return;
-        }
+        // Vector to the left and right position of the entity.
+        let entity_right = entity_vec - camera_plane.scalar_mul(size.x / 2.0);
+        let entity_left = entity_vec + camera_plane.scalar_mul(size.x / 2.0);
 
-        let Some(x) = get_entity_screen_x(&camera_direction, &camera_plane, &diff) else {
+        // Get start and end x coordinates
+        let Some(mut start_x) = get_entity_screen_x(&camera_direction, &camera_plane, &entity_left)
+        else {
             return;
         };
+        let Some(mut end_x) = get_entity_screen_x(&camera_direction, &camera_plane, &entity_right)
+        else {
+            return;
+        };
+
+        // Check if on screen and clip to bounds if necessary.
+        if end_x <= 0 || start_x >= WIDTH as i32 {
+            return;
+        }
+        start_x = start_x.max(0);
+        end_x = end_x.min(WIDTH as i32);
 
         // Calculate distance from camera.
         let distance = distance_from_camera(self.player_pos, camera_plane, entity.get_position());
 
-        // Calculate width and height on screen
-        let size = entity.get_size();
-        let width = (size.x * WIDTH as f32 / distance) as i32;
+        // Calculate height on screen. Basic equation is same as for height of a wall.
         let height = (size.y * HEIGHT as f32 / distance) as i32;
-
-        // Calculate start and end x
-        let start_x = (x - width / 2).max(0);
-        let end_x = (x + width / 2).min(WIDTH as i32);
 
         // Calculate start and end y
         let wall_height = HEIGHT as f32 / distance * CAMERA_HEIGHT;
@@ -343,11 +349,6 @@ fn get_entity_screen_x(
 
     let numerator = entity.x * camera_direction.y - entity.y * camera_direction.x;
     let camera_x = numerator / denumenator;
-
-    // Check camera_x is in field of view.
-    if !(-CAMERA_WIDTH..=CAMERA_WIDTH).contains(&camera_x) {
-        return None;
-    }
 
     // Transform x into pixel coordinates [0, WIDTH]
     let x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * WIDTH as f32;

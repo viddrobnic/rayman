@@ -35,12 +35,21 @@ pub struct UpdateEvent {
 
 impl Game {
     pub fn new() -> Self {
+        let mut sprites: Vec<Box<dyn Entity>> = vec![];
+        for y in 0..10 {
+            for x in 0..10 {
+                let ent = Box::new(DummyEntity {
+                    pos: Vec2::new(x as f32 + 0.5, y as f32 + 0.5),
+                });
+                sprites.push(ent);
+            }
+        }
         Self {
             player_pos: Vec2::new(7.5, 5.0),
             player_rot: f32::consts::PI / 2.0,
 
             level: Level::one(),
-            sprites: vec![Box::new(DummyEntity {})],
+            sprites,
 
             textures: TextureManager::new(),
         }
