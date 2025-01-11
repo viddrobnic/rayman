@@ -197,6 +197,9 @@ impl Game {
         if end_x <= 0 || start_x >= WIDTH as i32 {
             return;
         }
+
+        let width = (end_x - start_x) as f32; // Width before clipping, used for textures
+        let texture_x_offset = start_x;
         start_x = start_x.max(0);
         end_x = end_x.min(WIDTH as i32);
 
@@ -214,14 +217,20 @@ impl Game {
         let offset = offset as i32;
         let end_y = HEIGHT as i32 / 2 + wall_height / 2 - offset + height / 2;
 
-        let start_y = (end_y - height).max(0);
+        let mut start_y = end_y - height;
+        let texture_y_offset = start_y;
+        start_y = start_y.max(0);
         let end_y = end_y.min(HEIGHT as i32);
 
         // Render to screen.
+        // TODO: z buffer
+        // TODO: Sort by distance
         let texture = self.textures.get_texture(entity.get_texture_id());
         for x in (start_x..end_x).step_by(SCALE) {
+            let texture_x = (x - texture_x_offset) as f32 / width;
             for y in (start_y..end_y).step_by(SCALE) {
-                let color = texture.get_pixel(0.0, 0.0);
+                let texture_y = (y - texture_y_offset) as f32 / height as f32;
+                let color = texture.get_pixel(texture_x, texture_y);
 
                 for dx in 0..SCALE {
                     let x = (x as usize + dx).min(WIDTH - 1);

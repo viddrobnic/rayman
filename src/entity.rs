@@ -21,14 +21,21 @@ impl Entity for DummyEntity {
     }
 
     fn get_size(&self) -> Vec2<f32> {
-        Vec2::new(0.25, 0.25)
+        Vec2::new(0.5, 0.5)
     }
 
     fn get_floor_offset(&self) -> f32 {
-        0.25
+        0.5
     }
 
     fn get_texture_id(&self) -> TextureId {
-        TextureId::Red
+        let id = self.pos.x + self.pos.y;
+        let id = id as usize;
+        let id = id % 3;
+        match id {
+            0 => TextureId::Red,
+            1 => TextureId::Green,
+            _ => TextureId::Gradient,
+        }
     }
 }
