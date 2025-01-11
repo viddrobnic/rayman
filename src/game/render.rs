@@ -193,29 +193,36 @@ impl Game {
 
         // Calculate width and height on screen
         let size = entity.get_size();
-        let width = (size.x * WIDTH as f32 / distance) as usize;
-        let height = (size.y * HEIGHT as f32 / distance) as usize;
+        let width = (size.x * WIDTH as f32 / distance) as i32;
+        let height = (size.y * HEIGHT as f32 / distance) as i32;
 
+        // Calculate start and end x
         let start_x = (x - width / 2).max(0);
-        let end_x = (start_x + width).min(WIDTH);
+        let end_x = (x + width / 2).min(WIDTH as i32);
 
+        // Calculate start and end y
         let wall_height = HEIGHT as f32 / distance * CAMERA_HEIGHT;
-        let wall_height = wall_height.min(HEIGHT as f32) as usize;
+        let wall_height = wall_height as i32;
 
         let offset = entity.get_floor_offset() * wall_height as f32;
-        let offset = offset as usize;
-        let end_y = HEIGHT / 2 + wall_height / 2 - offset + height / 2;
-        let end_y = end_y.min(HEIGHT);
-        let start_y = (end_y - height).max(0);
+        let offset = offset as i32;
+        let end_y = HEIGHT as i32 / 2 + wall_height / 2 - offset + height / 2;
 
+        let start_y = (end_y - height).max(0);
+        let end_y = end_y.min(HEIGHT as i32);
+
+        // Render to screen.
         let texture = self.textures.get_texture(entity.get_texture_id());
         for x in (start_x..end_x).step_by(SCALE) {
             for y in (start_y..end_y).step_by(SCALE) {
                 let color = texture.get_pixel(0.0, 0.0);
 
                 for dx in 0..SCALE {
+                    let x = (x as usize + dx).min(WIDTH - 1);
+
                     for dy in 0..SCALE {
-                        draw_pixel(x + dx, y + dy, color);
+                        let y = (y as usize + dy).min(HEIGHT - 1);
+                        draw_pixel(x, y, color);
                     }
                 }
             }
@@ -317,7 +324,7 @@ fn get_entity_screen_x(
     camera_direction: &Vec2<f32>,
     camera_plane: &Vec2<f32>,
     entity: &Vec2<f32>,
-) -> Option<usize> {
+) -> Option<i32> {
     // Calculate x in camera coordinates, x in [-CAMERA_WIDTH, CAMERA_WIDTH].
     // diff = t * (camera_dir + camera_x * camera_plane)
     // diff x t * (camera_dir + camera_x * camera_plane) = 0  where x is cross product
@@ -344,5 +351,5 @@ fn get_entity_screen_x(
 
     // Transform x into pixel coordinates [0, WIDTH]
     let x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * WIDTH as f32;
-    Some(x as usize)
+    Some(x as i32)
 }

@@ -1,3 +1,4 @@
+use core::f32;
 use std::f32::consts::PI;
 
 use crate::entity::DummyEntity;
@@ -35,8 +36,8 @@ pub struct UpdateEvent {
 impl Game {
     pub fn new() -> Self {
         Self {
-            player_pos: Vec2::new(5.0, 5.0),
-            player_rot: 4.0,
+            player_pos: Vec2::new(7.5, 5.0),
+            player_rot: f32::consts::PI / 2.0,
 
             level: Level::one(),
             sprites: vec![Box::new(DummyEntity {})],
