@@ -4,6 +4,7 @@ use std::f32::consts::PI;
 use crate::entity::DummyEntity;
 use crate::vector::Vec2;
 use crate::{entity::Entity, texture::TextureManager};
+use crate::{MAX_HEIGHT, MAX_WIDTH};
 use level::{Level, Tile};
 
 mod level;
@@ -22,6 +23,9 @@ pub struct Game {
     level: Level,
     sprites: Vec<Box<dyn Entity>>,
     textures: TextureManager,
+
+    width: usize,
+    height: usize,
 }
 
 pub struct UpdateEvent {
@@ -52,7 +56,19 @@ impl Game {
             sprites,
 
             textures: TextureManager::new(),
+
+            width: MAX_WIDTH,
+            height: MAX_HEIGHT,
         }
+    }
+
+    pub fn set_size(&mut self, width: usize, height: usize) {
+        self.width = width;
+        self.height = height;
+    }
+
+    pub fn get_width(&self) -> usize {
+        self.width
     }
 
     pub fn update(&mut self, event: UpdateEvent) {

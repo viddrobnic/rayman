@@ -7,10 +7,10 @@ mod game;
 mod texture;
 mod vector;
 
-const WIDTH: usize = 1280;
-const HEIGHT: usize = 720;
+const MAX_WIDTH: usize = 1280;
+const MAX_HEIGHT: usize = 720;
 const SCALE: usize = 2;
-static mut SCREEN: [u8; WIDTH * HEIGHT * 4] = [0; WIDTH * HEIGHT * 4];
+static mut SCREEN: [u8; MAX_WIDTH * MAX_HEIGHT * 4] = [0; MAX_WIDTH * MAX_HEIGHT * 4];
 
 static mut GAME: Option<Game> = None;
 
@@ -36,6 +36,17 @@ pub extern "C" fn draw() {
         match &GAME {
             None => panic!("Game not initialized"),
             Some(game) => game.draw(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn set_size(width: usize, height: usize) {
+    unsafe {
+        #[allow(static_mut_refs)]
+        match &mut GAME {
+            None => panic!("Game not initialized"),
+            Some(game) => game.set_size(width, height),
         }
     }
 }
@@ -67,10 +78,18 @@ pub extern "C" fn update(
 
 #[inline]
 fn draw_pixel(x: usize, y: usize, color: Color) {
-    debug_assert!(x < WIDTH, "x {x} out of bounds");
-    debug_assert!(y < HEIGHT, "y {y} out of bounds");
+    debug_assert!(x < MAX_WIDTH, "x {x} out of bounds");
+    debug_assert!(y < MAX_HEIGHT, "y {y} out of bounds");
 
-    let idx = (y * WIDTH + x) * 4;
+    let width = unsafe {
+        #[allow(static_mut_refs)]
+        match &mut GAME {
+            None => panic!("Game not initialized"),
+            Some(game) => game.get_width(),
+        }
+    };
+
+    let idx = (y * width + x) * 4;
     unsafe {
         SCREEN[idx] = color.red;
         SCREEN[idx + 1] = color.green;

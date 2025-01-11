@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::entity::Entity;
 use crate::vector::Vec2;
-use crate::{draw_pixel, HEIGHT, SCALE, WIDTH};
+use crate::{draw_pixel, SCALE};
 
 use super::level::{Tile, Wall};
 use super::Game;
@@ -20,8 +20,8 @@ impl Game {
         let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
         let camera_plane = camera_direction.rotate_90();
 
-        for y in (0..HEIGHT / 2).step_by(SCALE) {
-            let camera_factor = 1.0 - 2.0 * (y as f32 / HEIGHT as f32);
+        for y in (0..self.height / 2).step_by(SCALE) {
+            let camera_factor = 1.0 - 2.0 * (y as f32 / self.height as f32);
             let t = CAMERA_HEIGHT / camera_factor;
 
             let left = self.player_pos
@@ -31,8 +31,8 @@ impl Game {
 
             let diff = right - left;
 
-            for x in (0..WIDTH).step_by(SCALE) {
-                let step = x as f32 / WIDTH as f32;
+            for x in (0..self.width).step_by(SCALE) {
+                let step = x as f32 / self.width as f32;
                 let pos = left + diff.scalar_mul(step);
 
                 let tile = self.level.get_tile(pos.x as usize, pos.y as usize);
@@ -59,7 +59,7 @@ impl Game {
                 for dy in 0..SCALE {
                     for dx in 0..SCALE {
                         // Draw floor
-                        draw_pixel(x + dx, HEIGHT - (y + dy) - 1, floor_color);
+                        draw_pixel(x + dx, self.height - (y + dy) - 1, floor_color);
 
                         // Draw ceiling
                         draw_pixel(x + dx, y + dy, ceil_color);
@@ -76,8 +76,8 @@ impl Game {
         let player_idx = Vec2::new(self.player_pos.x as i32, self.player_pos.y as i32);
         let player_rem = Vec2::new(self.player_pos.x.fract(), self.player_pos.y.fract());
 
-        for x in (0..WIDTH).step_by(SCALE) {
-            let camera_factor = CAMERA_WIDTH * (1.0 - 2.0 * x as f32 / WIDTH as f32);
+        for x in (0..self.width).step_by(SCALE) {
+            let camera_factor = CAMERA_WIDTH * (1.0 - 2.0 * x as f32 / self.width as f32);
             let camera_point = camera_plane.scalar_mul(camera_factor);
             let ray = camera_direction + camera_point;
 
@@ -184,43 +184,45 @@ impl Game {
         let entity_left = entity_vec + camera_plane.scalar_mul(size.x / 2.0);
 
         // Get start and end x coordinates
-        let Some(mut start_x) = get_entity_screen_x(&camera_direction, &camera_plane, &entity_left)
+        let Some(mut start_x) =
+            get_entity_screen_x(&camera_direction, &camera_plane, &entity_left, self.width)
         else {
             return;
         };
-        let Some(mut end_x) = get_entity_screen_x(&camera_direction, &camera_plane, &entity_right)
+        let Some(mut end_x) =
+            get_entity_screen_x(&camera_direction, &camera_plane, &entity_right, self.width)
         else {
             return;
         };
 
         // Check if on screen and clip to bounds if necessary.
-        if end_x <= 0 || start_x >= WIDTH as i32 {
+        if end_x <= 0 || start_x >= self.width as i32 {
             return;
         }
 
         let width = (end_x - start_x) as f32; // Width before clipping, used for textures
         let texture_x_offset = start_x;
         start_x = start_x.max(0);
-        end_x = end_x.min(WIDTH as i32);
+        end_x = end_x.min(self.width as i32);
 
         // Calculate distance from camera.
         let distance = distance_from_camera(self.player_pos, camera_plane, entity.get_position());
 
         // Calculate height on screen. Basic equation is same as for height of a wall.
-        let height = (size.y * HEIGHT as f32 / distance) as i32;
+        let height = (size.y * self.height as f32 / distance) as i32;
 
         // Calculate start and end y
-        let wall_height = HEIGHT as f32 / distance * CAMERA_HEIGHT;
+        let wall_height = self.height as f32 / distance * CAMERA_HEIGHT;
         let wall_height = wall_height as i32;
 
         let offset = entity.get_floor_offset() * wall_height as f32;
         let offset = offset as i32;
-        let end_y = HEIGHT as i32 / 2 + wall_height / 2 - offset + height / 2;
+        let end_y = self.height as i32 / 2 + wall_height / 2 - offset + height / 2;
 
         let mut start_y = end_y - height;
         let texture_y_offset = start_y;
         start_y = start_y.max(0);
-        let end_y = end_y.min(HEIGHT as i32);
+        let end_y = end_y.min(self.height as i32);
 
         // Render to screen.
         // TODO: z buffer
@@ -233,10 +235,10 @@ impl Game {
                 let color = texture.get_pixel(texture_x, texture_y);
 
                 for dx in 0..SCALE {
-                    let x = (x as usize + dx).min(WIDTH - 1);
+                    let x = (x as usize + dx).min(self.width - 1);
 
                     for dy in 0..SCALE {
-                        let y = (y as usize + dy).min(HEIGHT - 1);
+                        let y = (y as usize + dy).min(self.height - 1);
                         draw_pixel(x, y, color);
                     }
                 }
@@ -252,11 +254,11 @@ impl Game {
         distance: f32,
         ray_direction: Vec2<i32>,
     ) {
-        let real_hight = HEIGHT as f32 / distance * CAMERA_HEIGHT;
-        let height = real_hight.min(HEIGHT as f32) as usize;
+        let real_hight = self.height as f32 / distance * CAMERA_HEIGHT;
+        let height = real_hight.min(self.height as f32) as usize;
 
-        let texture_offset = if real_hight > HEIGHT as f32 {
-            (real_hight - HEIGHT as f32) / real_hight / 2.0
+        let texture_offset = if real_hight > self.height as f32 {
+            (real_hight - self.height as f32) / real_hight / 2.0
         } else {
             0.0
         };
@@ -272,7 +274,7 @@ impl Game {
         };
         let texture = self.textures.get_texture(texture_id);
 
-        let start_y = HEIGHT / 2 - height / 2;
+        let start_y = self.height / 2 - height / 2;
         let end_y = start_y + height;
         for y in start_y..end_y {
             let texture_y = (y - start_y) as f32 / real_hight + texture_offset;
@@ -339,6 +341,7 @@ fn get_entity_screen_x(
     camera_direction: &Vec2<f32>,
     camera_plane: &Vec2<f32>,
     entity: &Vec2<f32>,
+    width: usize,
 ) -> Option<i32> {
     // Calculate x in camera coordinates, x in [-CAMERA_WIDTH, CAMERA_WIDTH].
     // diff = t * (camera_dir + camera_x * camera_plane)
@@ -360,6 +363,6 @@ fn get_entity_screen_x(
     let camera_x = numerator / denumenator;
 
     // Transform x into pixel coordinates [0, WIDTH]
-    let x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * WIDTH as f32;
+    let x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * width as f32;
     Some(x as i32)
 }

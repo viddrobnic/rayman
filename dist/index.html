@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 
+<!-- This is very basic styling of the canvas. -->
+<!-- Since html, css and js were not the focus of this project, they are very jank... -->
+
 <head>
     <meta charset="utf-8">
     <title>RayMan</title>
@@ -20,21 +23,23 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100%;
+            width: 100%%;
             height: 100%;
             row-gap: 8px;
         }
 
-        .source {
-            /* Same width as canvas */
-            width: 1280px;
-        }
 
-        div {
-            text-align: end;
+        .source {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+
             font-size: 1.2em;
             color: gray;
             font-family: sans-serif;
+            /* A little bit of jank never hurt anyone... */
+            max-width: calc(1280px + 32px);
+            width: 100%;
         }
 
         a {
@@ -45,140 +50,18 @@
 
 <body>
     <div class="canvas-container">
-        <canvas id="game-canvas" width="1280" height="720"></canvas>
-
-        <div class="source" id="source-link">Source code available at <a href="https://github.com/viddrobnic/rayman"
-                target="_blank">GitHub</a></div>
-
-        <div id="size-notification" class="notification">Need at least 1280x720 screen size...</div>
+        <canvas id="game-canvas"></canvas>
+        <div class="source">
+            <!-- Inline styles, as before: a little bit of jank never hurt anyone... -->
+            <div style="padding-left: 16px;">Controls: WASD</div>
+            <div style="padding-right: 16px;">Source code available at <a href="https://github.com/viddrobnic/rayman"
+                    target="_blank">GitHub</a>
+            </div>
+        </div>
     </div>
     <script type="module">
-        import init from './rayman.js';
-
-        const canvas = document.getElementById('game-canvas');
-        const source_link = document.getElementById('source-link');
-        const size_notification = document.getElementById('size-notification');
-
-        let paused = false;
-
-        // Handle key presses
-        const pressed_keys = {
-            w: false,
-            a: false,
-            s: false,
-            d: false,
-        }
-        document.onkeydown = function (e) {
-            switch (e.key) {
-                case 'w':
-                    pressed_keys.w = true;
-                    break
-                case 'a':
-                    pressed_keys.a = true;
-                    break
-                case 's':
-                    pressed_keys.s = true;
-                    break
-                case 'd':
-                    pressed_keys.d = true;
-                    break
-            }
-        };
-
-        document.onkeyup = function (e) {
-            switch (e.key) {
-                case 'w':
-                    pressed_keys.w = false;
-                    break
-                case 'a':
-                    pressed_keys.a = false;
-                    break
-                case 's':
-                    pressed_keys.s = false;
-                    break
-                case 'd':
-                    pressed_keys.d = false;
-                    break
-            }
-        }
-
-        let loop = null;
-
-        // Handle window resize
-        function onResize() {
-            const [width, height] = [window.innerWidth, window.innerHeight];
-            if (width < 1280 || height < 720) {
-                canvas.style.display = 'none';
-                source_link.style.display = 'none';
-                size_notification.style.display = 'block';
-
-                paused = true;
-            } else {
-                canvas.style.display = 'block';
-                source_link.style.display = 'block';
-                size_notification.style.display = 'none';
-
-                paused = false;
-                if (loop) {
-                    requestAnimationFrame(loop);
-                }
-            }
-        }
-        window.addEventListener('resize', onResize);
-        onResize(); // Check size on load
-
-
-        // Main function to load wasm and render stuff
-        async function main() {
-            const wasm = await init();
-            const {memory, draw, update, get_screen, init: initGame} = wasm;
-            initGame();
-
-            const width = 1280;
-            const height = 720;
-
-            const ctx = canvas.getContext('2d');
-            let imageData = ctx.createImageData(width, height);
-            let screen = new Uint8Array(memory.buffer, get_screen(), width * height * 4);
-
-            // Render loop
-            let lastTime = performance.now();
-            let frameCount = 0;
-            let lastFpsUpdate = performance.now();
-            let fps = 0;
-            loop = function () {
-                if (paused) {
-                    return;
-                }
-
-                const now = performance.now();
-                const elapsed = now - lastTime;
-                lastTime = now;
-
-                // Calculate fps if needed
-                if (frameCount > 20) {
-                    fps = Math.round(frameCount / (now - lastFpsUpdate) * 1000);
-                    frameCount = 0;
-                    lastFpsUpdate = now;
-                }
-                frameCount++;
-
-                update(elapsed / 1000.0, pressed_keys.w, pressed_keys.a, pressed_keys.s, pressed_keys.d);
-                draw(now / 1000.0);
-                imageData.data.set(screen);
-                ctx.putImageData(imageData, 0, 0);
-
-                // Draw fps as text on context
-                ctx.fillStyle = 'white';
-                ctx.font = '24px sans-serif';
-                ctx.fillText(`FPS: ${fps}`, 10, 30);
-
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        }
-
-        main()
+        import {main} from './main.js';
+        main();
     </script>
 </body>
 
