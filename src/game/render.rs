@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::entity::Entity;
 use crate::vector::Vec2;
-use crate::{draw_pixel, SCALE};
+use crate::{draw_pixel, MAX_WIDTH, SCALE};
 
 use super::level::{Tile, Wall};
 use super::Game;
@@ -17,9 +17,11 @@ impl Game {
             plane: camera_direction.rotate_90(),
         };
 
+        let mut z_buffer = [0.0f32; MAX_WIDTH];
+
         self.draw_floor_ceil(&camera);
-        self.draw_walls(&camera);
-        self.draw_sprites(&camera);
+        self.draw_walls(&camera, &mut z_buffer);
+        self.draw_sprites(&camera, &z_buffer);
     }
 
     fn draw_floor_ceil(&self, camera: &Camera) {
@@ -72,7 +74,7 @@ impl Game {
         }
     }
 
-    fn draw_walls(&self, camera: &Camera) {
+    fn draw_walls(&self, camera: &Camera, z_buffer: &mut [f32]) {
         let player_idx = Vec2::new(self.player_pos.x as i32, self.player_pos.y as i32);
         let player_rem = Vec2::new(self.player_pos.x.fract(), self.player_pos.y.fract());
 
@@ -151,6 +153,11 @@ impl Game {
             };
             let distance = distance_from_camera(self.player_pos, camera.plane, collision);
 
+            // Set z buffer
+            for dx in 0..SCALE {
+                z_buffer[x + dx] = distance;
+            }
+
             let texture_x = match collision_info.hit_direction {
                 HitDirection::Horizontal => tile_rem.y,
                 HitDirection::Vertical => tile_rem.x,
@@ -165,7 +172,7 @@ impl Game {
         }
     }
 
-    fn draw_sprites(&mut self, camera: &Camera) {
+    fn draw_sprites(&mut self, camera: &Camera, z_buffer: &[f32]) {
         // Calculate distances from the camera.
         for sprite in &mut self.sprites {
             let distance =
@@ -181,11 +188,11 @@ impl Game {
 
         // Draw the actual sprites
         for sprite in &self.sprites {
-            self.draw_sprite(&*sprite.entity, sprite.distance.unwrap(), camera);
+            self.draw_sprite(&*sprite.entity, sprite.distance.unwrap(), camera, z_buffer);
         }
     }
 
-    fn draw_sprite(&self, entity: &dyn Entity, distance: f32, camera: &Camera) {
+    fn draw_sprite(&self, entity: &dyn Entity, distance: f32, camera: &Camera, z_buffer: &[f32]) {
         // Vector between player position and entity.
         let entity_vec = entity.get_position() - self.player_pos;
         let size = entity.get_size();
@@ -233,15 +240,21 @@ impl Game {
         let end_y = end_y.min(self.height as i32);
 
         // Render to screen.
-        // TODO: z buffer
-        // TODO: Sort by distance
         let texture = self.textures.get_texture(entity.get_texture_id());
         for x in (start_x..end_x).step_by(SCALE) {
+            // Check z buffer
+            if distance > z_buffer[x as usize] {
+                continue;
+            }
+
+            // Calculate text coords
             let texture_x = (x - texture_x_offset) as f32 / width;
             for y in (start_y..end_y).step_by(SCALE) {
+                // Get color from texture
                 let texture_y = (y - texture_y_offset) as f32 / height as f32;
                 let color = texture.get_pixel(texture_x, texture_y);
 
+                // Draw the pixels
                 for dx in 0..SCALE {
                     let x = (x as usize + dx).min(self.width - 1);
 

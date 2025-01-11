@@ -28,11 +28,11 @@ impl Entity for DummyEntity {
     }
 
     fn get_size(&self) -> Vec2<f32> {
-        Vec2::new(0.5, 0.5)
+        Vec2::new(0.25, 0.25)
     }
 
     fn get_floor_offset(&self) -> f32 {
-        0.5
+        0.25
     }
 
     fn get_texture_id(&self) -> TextureId {
