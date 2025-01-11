@@ -10,24 +10,27 @@ const CAMERA_WIDTH: f32 = 1.0;
 const CAMERA_HEIGHT: f32 = 1.0;
 
 impl Game {
-    pub fn draw(&self) {
-        self.draw_floor_ceil();
-        self.draw_walls();
-        self.draw_sprites();
+    pub fn draw(&mut self) {
+        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
+        let camera = Camera {
+            direction: camera_direction,
+            plane: camera_direction.rotate_90(),
+        };
+
+        self.draw_floor_ceil(&camera);
+        self.draw_walls(&camera);
+        self.draw_sprites(&camera);
     }
 
-    fn draw_floor_ceil(&self) {
-        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
-        let camera_plane = camera_direction.rotate_90();
-
+    fn draw_floor_ceil(&self, camera: &Camera) {
         for y in (0..self.height / 2).step_by(SCALE) {
             let camera_factor = 1.0 - 2.0 * (y as f32 / self.height as f32);
             let t = CAMERA_HEIGHT / camera_factor;
 
             let left = self.player_pos
-                + (camera_direction + camera_plane.scalar_mul(CAMERA_WIDTH)).scalar_mul(t);
+                + (camera.direction + camera.plane.scalar_mul(CAMERA_WIDTH)).scalar_mul(t);
             let right = self.player_pos
-                + (camera_direction - camera_plane.scalar_mul(CAMERA_WIDTH)).scalar_mul(t);
+                + (camera.direction - camera.plane.scalar_mul(CAMERA_WIDTH)).scalar_mul(t);
 
             let diff = right - left;
 
@@ -69,17 +72,14 @@ impl Game {
         }
     }
 
-    fn draw_walls(&self) {
-        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
-        let camera_plane = camera_direction.rotate_90();
-
+    fn draw_walls(&self, camera: &Camera) {
         let player_idx = Vec2::new(self.player_pos.x as i32, self.player_pos.y as i32);
         let player_rem = Vec2::new(self.player_pos.x.fract(), self.player_pos.y.fract());
 
         for x in (0..self.width).step_by(SCALE) {
             let camera_factor = CAMERA_WIDTH * (1.0 - 2.0 * x as f32 / self.width as f32);
-            let camera_point = camera_plane.scalar_mul(camera_factor);
-            let ray = camera_direction + camera_point;
+            let camera_point = camera.plane.scalar_mul(camera_factor);
+            let ray = camera.direction + camera_point;
 
             let mut tile_idx = player_idx; // Index of tile we are on.
             let mut tile_rem = player_rem; // Position inside the tile.
@@ -149,7 +149,7 @@ impl Game {
                 x: tile_idx.x as f32 + tile_rem.x,
                 y: tile_idx.y as f32 + tile_rem.y,
             };
-            let distance = distance_from_camera(self.player_pos, camera_plane, collision);
+            let distance = distance_from_camera(self.player_pos, camera.plane, collision);
 
             let texture_x = match collision_info.hit_direction {
                 HitDirection::Horizontal => tile_rem.y,
@@ -165,32 +165,43 @@ impl Game {
         }
     }
 
-    fn draw_sprites(&self) {
+    fn draw_sprites(&mut self, camera: &Camera) {
+        // Calculate distances from the camera.
+        for sprite in &mut self.sprites {
+            let distance =
+                distance_from_camera(self.player_pos, camera.plane, sprite.entity.get_position());
+            sprite.distance = Some(distance)
+        }
+
+        // Sort by distance ascending. This way we first render the entities
+        // that are the farthest away, and then the ones that are the closest.
+        // Rendering them in this order makes them overlap correctly.
+        self.sprites
+            .sort_by(|s1, s2| s2.distance.unwrap().total_cmp(&s1.distance.unwrap()));
+
+        // Draw the actual sprites
         for sprite in &self.sprites {
-            self.draw_sprite(&**sprite);
+            self.draw_sprite(&*sprite.entity, sprite.distance.unwrap(), camera);
         }
     }
 
-    fn draw_sprite(&self, entity: &dyn Entity) {
-        let camera_direction = Vec2::<f32>::from_polar(self.player_rot);
-        let camera_plane = camera_direction.rotate_90();
-
+    fn draw_sprite(&self, entity: &dyn Entity, distance: f32, camera: &Camera) {
         // Vector between player position and entity.
         let entity_vec = entity.get_position() - self.player_pos;
         let size = entity.get_size();
 
         // Vector to the left and right position of the entity.
-        let entity_right = entity_vec - camera_plane.scalar_mul(size.x / 2.0);
-        let entity_left = entity_vec + camera_plane.scalar_mul(size.x / 2.0);
+        let entity_right = entity_vec - camera.plane.scalar_mul(size.x / 2.0);
+        let entity_left = entity_vec + camera.plane.scalar_mul(size.x / 2.0);
 
         // Get start and end x coordinates
         let Some(mut start_x) =
-            get_entity_screen_x(&camera_direction, &camera_plane, &entity_left, self.width)
+            get_entity_screen_x(&camera.direction, &camera.plane, &entity_left, self.width)
         else {
             return;
         };
         let Some(mut end_x) =
-            get_entity_screen_x(&camera_direction, &camera_plane, &entity_right, self.width)
+            get_entity_screen_x(&camera.direction, &camera.plane, &entity_right, self.width)
         else {
             return;
         };
@@ -204,9 +215,6 @@ impl Game {
         let texture_x_offset = start_x;
         start_x = start_x.max(0);
         end_x = end_x.min(self.width as i32);
-
-        // Calculate distance from camera.
-        let distance = distance_from_camera(self.player_pos, camera_plane, entity.get_position());
 
         // Calculate height on screen. Basic equation is same as for height of a wall.
         let height = (size.y * self.height as f32 / distance) as i32;
@@ -299,6 +307,11 @@ enum HitDirection {
 struct CollisionInfo<'a> {
     wall: &'a Wall,
     hit_direction: HitDirection,
+}
+
+struct Camera {
+    direction: Vec2<f32>,
+    plane: Vec2<f32>,
 }
 
 // Auxiliary function to calculate the step factor for moving to the next tile

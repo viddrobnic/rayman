@@ -10,6 +10,13 @@ pub trait Entity: fmt::Debug {
     fn get_texture_id(&self) -> TextureId;
 }
 
+// Holds a dynamic dispatch entity and it's distance from the camera.
+#[derive(Debug)]
+pub struct EntityBox {
+    pub entity: Box<dyn Entity>,
+    pub distance: Option<f32>,
+}
+
 #[derive(Debug)]
 pub struct DummyEntity {
     pub pos: Vec2<f32>,

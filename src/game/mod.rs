@@ -1,9 +1,9 @@
 use core::f32;
 use std::f32::consts::PI;
 
-use crate::entity::DummyEntity;
+use crate::entity::{DummyEntity, EntityBox};
+use crate::texture::TextureManager;
 use crate::vector::Vec2;
-use crate::{entity::Entity, texture::TextureManager};
 use crate::{MAX_HEIGHT, MAX_WIDTH};
 use level::{Level, Tile};
 
@@ -21,7 +21,7 @@ pub struct Game {
     player_rot: f32,
 
     level: Level,
-    sprites: Vec<Box<dyn Entity>>,
+    sprites: Vec<EntityBox>,
     textures: TextureManager,
 
     width: usize,
@@ -39,13 +39,16 @@ pub struct UpdateEvent {
 
 impl Game {
     pub fn new() -> Self {
-        let mut sprites: Vec<Box<dyn Entity>> = vec![];
+        let mut sprites: Vec<EntityBox> = vec![];
         for y in 0..10 {
             for x in 0..10 {
                 let ent = Box::new(DummyEntity {
                     pos: Vec2::new(x as f32 + 0.5, y as f32 + 0.5),
                 });
-                sprites.push(ent);
+                sprites.push(EntityBox {
+                    entity: ent,
+                    distance: None,
+                });
             }
         }
         Self {

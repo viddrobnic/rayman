@@ -33,7 +33,7 @@ pub extern "C" fn get_screen() -> *const u8 {
 pub extern "C" fn draw() {
     unsafe {
         #[allow(static_mut_refs)]
-        match &GAME {
+        match &mut GAME {
             None => panic!("Game not initialized"),
             Some(game) => game.draw(),
         }
