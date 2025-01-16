@@ -1,4 +1,4 @@
-/target
-/dist/rayman_bg.wasm
-/dist/rayman.js
 .DS_Store
+
+/zig-out
+.zig-cache

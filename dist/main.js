@@ -2,8 +2,6 @@
 // and copies pixels from wasm to canvas.
 // Since html, css and js were not the focus of this project, they are very jank...
 
-import init from "./rayman.js";
-
 // Shared objects
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
@@ -92,11 +90,16 @@ window.addEventListener("resize", updateSize);
 
 // Main function to load wasm and render stuff
 export async function main() {
-  wasm = await init();
-  const { memory, draw, update, get_screen, init: initGame } = wasm;
+  wasm = await WebAssembly.instantiateStreaming(fetch("/rayman.wasm"), {
+    env: {
+      log_int: console.log,
+    },
+  });
+  wasm = wasm.instance.exports;
+  const { memory, draw, update, get_screen, init } = wasm;
 
   // Initialize game and screen pixels buffer
-  initGame();
+  init();
   screen = new Uint8Array(
     memory.buffer,
     get_screen(),
