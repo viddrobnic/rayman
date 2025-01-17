@@ -8,7 +8,6 @@ const ctx = canvas.getContext("2d");
 let imageData = ctx.createImageData(canvas.width, canvas.height);
 
 let wasm = null;
-let screen = null;
 
 // Handle key presses
 const pressed_keys = {
@@ -83,7 +82,6 @@ function updateSize() {
   // and resize screen pixels buffer.
   if (wasm) {
     wasm.set_size(w, h);
-    screen = new Uint8Array(wasm.memory.buffer, wasm.get_screen(), w * h * 4);
   }
 }
 window.addEventListener("resize", updateSize);
@@ -100,11 +98,6 @@ export async function main() {
 
   // Initialize game and screen pixels buffer
   init();
-  screen = new Uint8Array(
-    memory.buffer,
-    get_screen(),
-    canvas.width * canvas.height * 4,
-  );
 
   // Call update size to set initial size
   updateSize();
@@ -135,6 +128,12 @@ export async function main() {
       pressed_keys.d,
     );
     draw(now / 1000.0);
+
+    const screen = new Uint8Array(
+      memory.buffer,
+      get_screen(),
+      canvas.width * canvas.height * 4,
+    );
     imageData.data.set(screen);
     ctx.putImageData(imageData, 0, 0);
 

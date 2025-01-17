@@ -22,8 +22,14 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
 
     // Creates a step for unit testing.
+    const test_module = b.createModule(.{
+        .root_source_file = b.path("src/root.zig"),
+        .target = b.standardTargetOptions(.{}),
+        .optimize = b.standardOptimizeOption(.{}),
+    });
+
     const lib_unit_tests = b.addTest(.{
-        .root_module = module,
+        .root_module = test_module,
     });
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);

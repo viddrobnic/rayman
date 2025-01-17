@@ -1,4 +1,6 @@
 .DS_Store
 
+/dist/rayman.wasm
 /zig-out
 .zig-cache
+
