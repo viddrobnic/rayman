@@ -1,8 +1,9 @@
 const std = @import("std");
-const render = @import("render.zig");
 const screen = @import("screen.zig");
 const Textures = @import("textures.zig");
-const Game = @import("game.zig");
+
+const Game = @import("game/game.zig");
+const render = @import("game/render.zig");
 
 var game: Game = undefined;
 
@@ -24,9 +25,7 @@ pub export fn init() void {
 }
 
 pub export fn draw() void {
-    render.render(0.0) catch {
-        @panic("Failed to render screen");
-    };
+    render.render(&game);
 }
 
 pub export fn set_size(width: usize, height: usize) void {

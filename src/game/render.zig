@@ -1,9 +1,9 @@
-const std = @import("std");
+const screen = @import("../screen.zig");
+const Game = @import("game.zig");
 
-const Color = @import("color.zig");
-const screen = @import("screen.zig");
+const Color = @import("../color.zig");
 
-pub fn render(_: f32) !void {
+pub fn render(_: *const Game) void {
     const color = Color.new(255, 0, 0);
 
     for (0..screen.height) |y| {

@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const textures = @import("textures.zig");
-const levels = @import("level.zig");
+const textures = @import("../textures.zig");
+const levels = @import("../level.zig");
 
-const vec_from_polar = @import("vec.zig").from_polar;
-const Vec = @import("vec.zig").Vec(f32);
+const vec_from_polar = @import("../vec.zig").from_polar;
+const Vec = @import("../vec.zig").Vec(f32);
 
 const SPEED = 1.8;
 const ROTATION_SPEED = 1.8;
