@@ -2,9 +2,9 @@ const std = @import("std");
 const render = @import("render.zig");
 const screen = @import("screen.zig");
 const Textures = @import("textures.zig");
+const Game = @import("game.zig");
 
-// Loaded textures
-pub var textures: Textures = undefined;
+var game: Game = undefined;
 
 // TODO: Remove once update is implemented correctly.
 var time: f32 = 0.0;
@@ -21,8 +21,8 @@ pub export fn init() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    textures = Textures.init(allocator) catch {
-        @panic("Failed to initialize textures");
+    game = Game.init(allocator) catch {
+        @panic("Failed to initialize game");
     };
 }
 

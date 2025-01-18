@@ -1,20 +1,14 @@
 const std = @import("std");
 const Color = @import("color.zig");
 
-const Self = @This();
-
-// Available textures
-red: Texture,
-
-// Arena allocator
-arena: std.heap.ArenaAllocator,
-
 pub const Texture = struct {
     width: usize,
     height: usize,
     pixels: []Color,
 
-    pub fn get_pixel(self: *const @This(), x: f32, y: f32) Color {
+    const Self = @This();
+
+    pub fn get_pixel(self: *const Self, x: f32, y: f32) Color {
         var x_idx: usize = @intFromFloat(@as(f32, @floatFromInt(self.width)) * x);
         var y_idx: usize = @intFromFloat(@as(f32, @floatFromInt(self.height)) * y);
 
@@ -41,16 +35,26 @@ fn texture_from_color(allocator: std.mem.Allocator, color: Color) !Texture {
     };
 }
 
-pub fn init(allocator: std.mem.Allocator) !Self {
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    const arena_alloc = arena.allocator();
+pub const TextureManager = struct {
+    // Available textures
+    red: Texture,
 
-    return .{
-        .red = try texture_from_color(arena_alloc, Color.new(255, 0, 0)),
-        .arena = arena,
-    };
-}
+    // Allocator
+    arena: std.heap.ArenaAllocator,
 
-pub fn deinit(self: *const Self) void {
-    self.arena.deinit();
-}
+    const Self = @This();
+
+    pub fn init(allocator: std.mem.Allocator) !Self {
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        const arena_alloc = arena.allocator();
+
+        return .{
+            .red = try texture_from_color(arena_alloc, Color.new(255, 0, 0)),
+            .arena = arena,
+        };
+    }
+
+    pub fn deinit(self: *const Self) void {
+        self.arena.deinit();
+    }
+};
