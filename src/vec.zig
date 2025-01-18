@@ -6,11 +6,17 @@ pub fn Vec(comptime T: type) type {
         const Self = @This();
 
         pub fn rotate_90(self: *const Self) Self {
-            return .{ -self.y, self.x };
+            return .{
+                .x = -self.y,
+                .y = self.x,
+            };
         }
 
         pub fn scalar_mul(self: *const Self, scalar: T) Self {
-            return .{ self.x * scalar, self.y * scalar };
+            return .{
+                .x = self.x * scalar,
+                .y = self.y * scalar,
+            };
         }
 
         pub fn length(self: *const Self) T {
@@ -18,15 +24,24 @@ pub fn Vec(comptime T: type) type {
         }
 
         pub fn add(self: *const Self, other: *const Self) Self {
-            return .{ self.x + other.x, self.y + other.y };
+            return .{
+                .x = self.x + other.x,
+                .y = self.y + other.y,
+            };
         }
 
         pub fn sub(self: *const Self, other: *const Self) Self {
-            return .{ self.x - other.x, self.y - other.y };
+            return .{
+                .x = self.x - other.x,
+                .y = self.y - other.y,
+            };
         }
     };
 }
 
 pub fn from_polar(angle: f32) Vec(f32) {
-    return .{ @cos(angle), @sin(angle) };
+    return .{
+        .x = @cos(angle),
+        .y = @sin(angle),
+    };
 }

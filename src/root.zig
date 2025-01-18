@@ -6,9 +6,6 @@ const Game = @import("game.zig");
 
 var game: Game = undefined;
 
-// TODO: Remove once update is implemented correctly.
-var time: f32 = 0.0;
-
 // -------------------------
 // Functions provided by js.
 // -------------------------
@@ -27,7 +24,7 @@ pub export fn init() void {
 }
 
 pub export fn draw() void {
-    render.render(time) catch {
+    render.render(0.0) catch {
         @panic("Failed to render screen");
     };
 }
@@ -37,6 +34,6 @@ pub export fn set_size(width: usize, height: usize) void {
     screen.height = height;
 }
 
-pub export fn update(dt: f32, _: bool, _: bool, _: bool, _: bool) void {
-    time += dt;
+pub export fn update(dt: f32, w_pressed: bool, a_pressed: bool, s_pressed: bool, d_pressed: bool) void {
+    game.update(dt, w_pressed, a_pressed, s_pressed, d_pressed);
 }
