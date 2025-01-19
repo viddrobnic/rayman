@@ -5,7 +5,7 @@ pub const MAX_HEIGHT = 720;
 pub const SCALE = 2;
 
 pub var width: usize = MAX_WIDTH;
-pub var height: usize = MAX_WIDTH;
+pub var height: usize = MAX_HEIGHT;
 pub var screen: [MAX_WIDTH * MAX_HEIGHT * 4]u8 = undefined;
 
 pub export fn get_screen() [*]u8 {
