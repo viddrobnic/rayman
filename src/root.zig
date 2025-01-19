@@ -5,6 +5,8 @@ const Textures = @import("textures.zig");
 const Game = @import("game/game.zig");
 const render = @import("game/render.zig");
 
+const assets = @import("assets.zig");
+
 var game: Game = undefined;
 
 // -------------------------
@@ -22,6 +24,9 @@ pub export fn init() void {
     game = Game.init(allocator) catch {
         @panic("Failed to initialize game");
     };
+
+    log_int(assets.block.len);
+    log_int(assets.block[0]);
 }
 
 pub export fn draw() void {
