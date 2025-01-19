@@ -10,10 +10,14 @@ pub fn build(b: *std.Build) void {
     const asset_pack = b.addExecutable(.{
         .name = "asset_pack",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("src/asset_pack.zig"),
+            .root_source_file = b.path("src/asset_pack/main.zig"),
             .target = b.resolveTargetQuery(.{}),
         }),
     });
+    asset_pack.addCSourceFile(.{
+        .file = b.path("src/asset_pack/stb_image_impl.c"),
+    });
+    asset_pack.addIncludePath(b.path("src/asset_pack"));
 
     const assets = [_]AssetPackMapping{
         .{

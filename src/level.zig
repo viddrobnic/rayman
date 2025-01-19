@@ -36,6 +36,14 @@ pub fn generate(allocator: std.mem.Allocator, texture_manager: *const textures.T
             if (is_edge) {
                 try tiles.append(.{ .wall = &texture_manager.red });
             } else {
+                if (x == 5 and y == 5) {
+                    try tiles.append(.{ .empty = .{
+                        .floor = &texture_manager.block,
+                        .ceiling = &texture_manager.floor2,
+                    } });
+                    continue;
+                }
+
                 if ((y + x) % 2 == 0) {
                     try tiles.append(.{ .empty = .{
                         .floor = &texture_manager.floor1,

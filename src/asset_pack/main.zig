@@ -1,5 +1,9 @@
 const std = @import("std");
 
+const c = @cImport({
+    @cInclude("stb_image.h");
+});
+
 const usage =
     \\Usage: ./asset_pack <input_path> <output_path>
     \\
@@ -26,8 +30,25 @@ pub fn main() !void {
     };
     defer output_file.close();
 
-    const data = [_]u8{69};
-    try output_file.writeAll(&data);
+    var width: u32 = undefined;
+    var height: u32 = undefined;
+    const channels = 4;
+
+    const pixels = c.stbi_load(args[1], @ptrCast(&width), @ptrCast(&height), null, channels);
+    const size = width * height * channels;
+
+    // write width
+    var buffer: [4]u8 = undefined;
+    std.mem.writeInt(u32, &buffer, width, .big);
+    try output_file.writeAll(&buffer);
+
+    // write height
+    std.mem.writeInt(u32, &buffer, height, .big);
+    try output_file.writeAll(&buffer);
+
+    // write pixels
+    try output_file.writeAll(pixels[0..size]);
+
     return std.process.cleanExit();
 }
 

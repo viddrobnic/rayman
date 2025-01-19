@@ -1,5 +1,7 @@
 const std = @import("std");
+
 const Color = @import("color.zig");
+const Assets = @import("assets.zig");
 
 pub const Texture = struct {
     width: usize,
@@ -40,20 +42,38 @@ pub const TextureManager = struct {
     red: Texture,
     floor1: Texture,
     floor2: Texture,
+    block: Texture,
 
     // Allocator
     arena: std.heap.ArenaAllocator,
 
     const Self = @This();
 
-    pub fn init(allocator: std.mem.Allocator) !Self {
+    pub fn init(allocator: std.mem.Allocator, assets: *const Assets) !Self {
         var arena = std.heap.ArenaAllocator.init(allocator);
         const arena_alloc = arena.allocator();
+
+        var pixels = try arena_alloc.alloc(Color, assets.block.width * assets.block.height);
+        for (0..pixels.len) |idx| {
+            pixels[idx] = Color{
+                .red = assets.block.pixels[idx * 4],
+                .green = assets.block.pixels[idx * 4 + 1],
+                .blue = assets.block.pixels[idx * 4 + 2],
+                .alpha = assets.block.pixels[idx * 4 + 3],
+            };
+        }
+
+        const block = Texture{
+            .width = assets.block.width,
+            .height = assets.block.height,
+            .pixels = pixels,
+        };
 
         return .{
             .red = try texture_from_color(arena_alloc, Color.new(255, 0, 0)),
             .floor1 = try texture_from_color(arena_alloc, Color.new(0x44, 0x44, 0x44)),
             .floor2 = try texture_from_color(arena_alloc, Color.new(0x66, 0x66, 0x66)),
+            .block = block,
 
             .arena = arena,
         };
