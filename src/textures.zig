@@ -38,6 +38,8 @@ fn texture_from_color(allocator: std.mem.Allocator, color: Color) !Texture {
 pub const TextureManager = struct {
     // Available textures
     red: Texture,
+    floor1: Texture,
+    floor2: Texture,
 
     // Allocator
     arena: std.heap.ArenaAllocator,
@@ -50,6 +52,9 @@ pub const TextureManager = struct {
 
         return .{
             .red = try texture_from_color(arena_alloc, Color.new(255, 0, 0)),
+            .floor1 = try texture_from_color(arena_alloc, Color.new(0x44, 0x44, 0x44)),
+            .floor2 = try texture_from_color(arena_alloc, Color.new(0x66, 0x66, 0x66)),
+
             .arena = arena,
         };
     }

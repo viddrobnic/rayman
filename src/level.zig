@@ -34,12 +34,19 @@ pub fn generate(allocator: std.mem.Allocator, texture_manager: *const textures.T
         for (0..width) |x| {
             const is_edge = x == 0 or x == width - 1 or y == 0 or y == height - 1;
             if (is_edge) {
-                try tiles.append(.{ .empty = .{
-                    .floor = &texture_manager.red,
-                    .ceiling = &texture_manager.red,
-                } });
-            } else {
                 try tiles.append(.{ .wall = &texture_manager.red });
+            } else {
+                if ((y + x) % 2 == 0) {
+                    try tiles.append(.{ .empty = .{
+                        .floor = &texture_manager.floor1,
+                        .ceiling = &texture_manager.floor2,
+                    } });
+                } else {
+                    try tiles.append(.{ .empty = .{
+                        .floor = &texture_manager.floor2,
+                        .ceiling = &texture_manager.floor1,
+                    } });
+                }
             }
         }
     }
