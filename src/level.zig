@@ -33,7 +33,7 @@ pub fn generate(allocator: std.mem.Allocator, assets: *const Assets, width: usiz
         for (0..width) |x| {
             const is_edge = x == 0 or x == width - 1 or y == 0 or y == height - 1;
             if (is_edge) {
-                try tiles.append(.{ .wall = &assets.red });
+                try tiles.append(.{ .wall = &assets.block });
             } else {
                 if (x == 5 and y == 5) {
                     try tiles.append(.{ .empty = .{
