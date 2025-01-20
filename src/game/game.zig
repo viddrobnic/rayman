@@ -1,8 +1,7 @@
 const std = @import("std");
 
-const textures = @import("../textures.zig");
 const levels = @import("../level.zig");
-const Assets = @import("../assets.zig");
+const Assets = @import("../assets/assets.zig");
 
 const vec_from_polar = @import("../vec.zig").from_polar;
 const Vec = @import("../vec.zig").Vec(f32);
@@ -16,20 +15,19 @@ player_pos: Vec,
 player_rot: f32,
 
 level: levels.Level,
-texture_manager: textures.TextureManager,
+assets: Assets,
 
 const Self = @This();
 
 pub fn init(allocator: std.mem.Allocator) !Self {
-    const assets = Assets.init();
-    const texture_manager = try textures.TextureManager.init(allocator, &assets);
+    const assets = try Assets.init();
 
     return .{
         .player_pos = Vec{ .x = 7.5, .y = 5.0 },
         .player_rot = 0.0,
 
-        .level = try levels.generate(allocator, &texture_manager, 10, 10),
-        .texture_manager = texture_manager,
+        .level = try levels.generate(allocator, &assets, 10, 10),
+        .assets = assets,
     };
 }
 

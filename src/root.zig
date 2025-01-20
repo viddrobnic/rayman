@@ -1,6 +1,5 @@
 const std = @import("std");
 const screen = @import("screen.zig");
-const Textures = @import("textures.zig");
 
 const Game = @import("game/game.zig");
 const render = @import("game/render.zig");

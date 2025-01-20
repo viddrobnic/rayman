@@ -1,13 +1,12 @@
 const std = @import("std");
-const textures = @import("textures.zig");
-
-const Texture = textures.Texture;
+const Assets = @import("assets/assets.zig");
+const Image = @import("assets/image.zig").Image;
 
 pub const Tile = union(enum) {
-    wall: *const Texture,
+    wall: *const Image,
     empty: struct {
-        floor: *const Texture,
-        ceiling: *const Texture,
+        floor: *const Image,
+        ceiling: *const Image,
     },
 };
 
@@ -27,32 +26,32 @@ pub const Level = struct {
     }
 };
 
-pub fn generate(allocator: std.mem.Allocator, texture_manager: *const textures.TextureManager, width: usize, height: usize) !Level {
+pub fn generate(allocator: std.mem.Allocator, assets: *const Assets, width: usize, height: usize) !Level {
     var tiles = try std.ArrayList(Tile).initCapacity(allocator, width * height);
 
     for (0..height) |y| {
         for (0..width) |x| {
             const is_edge = x == 0 or x == width - 1 or y == 0 or y == height - 1;
             if (is_edge) {
-                try tiles.append(.{ .wall = &texture_manager.red });
+                try tiles.append(.{ .wall = &assets.red });
             } else {
                 if (x == 5 and y == 5) {
                     try tiles.append(.{ .empty = .{
-                        .floor = &texture_manager.block,
-                        .ceiling = &texture_manager.floor2,
+                        .floor = &assets.block,
+                        .ceiling = &assets.floor2,
                     } });
                     continue;
                 }
 
                 if ((y + x) % 2 == 0) {
                     try tiles.append(.{ .empty = .{
-                        .floor = &texture_manager.floor1,
-                        .ceiling = &texture_manager.floor2,
+                        .floor = &assets.floor1,
+                        .ceiling = &assets.floor2,
                     } });
                 } else {
                     try tiles.append(.{ .empty = .{
-                        .floor = &texture_manager.floor2,
-                        .ceiling = &texture_manager.floor1,
+                        .floor = &assets.floor2,
+                        .ceiling = &assets.floor1,
                     } });
                 }
             }
