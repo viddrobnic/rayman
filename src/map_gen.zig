@@ -7,8 +7,10 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
+    const seed = std.time.timestamp();
+
     const assets = try Assets.init();
-    const level = try levels.generate(allocator, &assets, 10, 10);
+    const level = try levels.generate(allocator, @intCast(seed), &assets);
     defer level.tiles.deinit();
 
     display_level(&level);

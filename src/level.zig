@@ -2,6 +2,11 @@ const std = @import("std");
 const Assets = @import("assets/assets.zig");
 const Image = @import("assets/image.zig").Image;
 
+const GRID_SIZE = 3;
+const SIZE = 60;
+const MIN_ROOM_SIZE = 10;
+const MIN_PADDING = 2;
+
 pub const Tile = union(enum) {
     wall: *const Image,
     empty: struct {
@@ -10,10 +15,20 @@ pub const Tile = union(enum) {
     },
 };
 
+pub const Room = struct {
+    start_x: usize,
+    start_y: usize,
+    width: usize,
+    height: usize,
+};
+
 pub const Level = struct {
     width: usize,
     height: usize,
+
     tiles: std.ArrayList(Tile),
+
+    rooms: std.ArrayList(Room),
 
     const Self = @This();
 
@@ -26,41 +41,57 @@ pub const Level = struct {
     }
 };
 
-pub fn generate(allocator: std.mem.Allocator, assets: *const Assets, width: usize, height: usize) !Level {
-    var tiles = try std.ArrayList(Tile).initCapacity(allocator, width * height);
+pub fn generate(allocator: std.mem.Allocator, seed: u64, assets: *const Assets) !Level {
+    var prng = std.Random.DefaultPrng.init(seed);
+    const rand = prng.random();
 
-    for (0..height) |y| {
-        for (0..width) |x| {
-            const is_edge = x == 0 or x == width - 1 or y == 0 or y == height - 1;
-            if (is_edge) {
-                try tiles.append(.{ .wall = &assets.block });
-            } else {
-                if (x == 5 and y == 5) {
-                    try tiles.append(.{ .empty = .{
-                        .floor = &assets.block,
-                        .ceiling = &assets.floor2,
-                    } });
-                    continue;
-                }
+    var tiles = try std.ArrayList(Tile).initCapacity(allocator, SIZE * SIZE);
+    for (0..SIZE * SIZE) |_| {
+        try tiles.append(.{ .wall = &assets.red });
+    }
 
-                if ((y + x) % 2 == 0) {
-                    try tiles.append(.{ .empty = .{
-                        .floor = &assets.floor1,
-                        .ceiling = &assets.floor2,
-                    } });
-                } else {
-                    try tiles.append(.{ .empty = .{
-                        .floor = &assets.floor2,
-                        .ceiling = &assets.floor1,
-                    } });
-                }
-            }
+    var rooms = try std.ArrayList(Room).initCapacity(allocator, GRID_SIZE * GRID_SIZE);
+
+    for (0..GRID_SIZE) |room_y| {
+        for (0..GRID_SIZE) |room_x| {
+            const room = generate_room(&tiles, room_x, room_y, rand, assets);
+            try rooms.append(room);
         }
     }
 
     return .{
+        .width = SIZE,
+        .height = SIZE,
+        .tiles = tiles,
+        .rooms = rooms,
+    };
+}
+
+fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand: std.Random, assets: *const Assets) Room {
+    const room_size = SIZE / GRID_SIZE;
+    const start_x = room_x * room_size;
+    const start_y = room_y * room_size;
+
+    const offset_x = rand.intRangeAtMost(usize, MIN_PADDING, room_size - MIN_ROOM_SIZE - MIN_PADDING);
+    const offset_y = rand.intRangeAtMost(usize, MIN_PADDING, room_size - MIN_ROOM_SIZE - MIN_PADDING);
+
+    const width = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - offset_x - MIN_PADDING);
+    const height = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - offset_y - MIN_PADDING);
+
+    for ((start_y + offset_y)..(start_y + offset_y + height)) |y| {
+        for ((start_x + offset_x)..(start_x + offset_x + width)) |x| {
+            const idx = y * SIZE + x;
+            tiles.items[idx] = .{ .empty = .{
+                .floor = &assets.floor1,
+                .ceiling = &assets.floor2,
+            } };
+        }
+    }
+
+    return .{
+        .start_x = start_x + offset_x,
+        .start_y = start_y + offset_y,
         .width = width,
         .height = height,
-        .tiles = tiles,
     };
 }

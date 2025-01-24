@@ -97,7 +97,7 @@ export async function main() {
   const { memory, draw, update, get_screen, init } = wasm;
 
   // Initialize game and screen pixels buffer
-  init();
+  init(performance.now());
 
   // Call update size to set initial size
   updateSize();

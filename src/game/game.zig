@@ -19,14 +19,19 @@ assets: Assets,
 
 const Self = @This();
 
-pub fn init(allocator: std.mem.Allocator) !Self {
+pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
     const assets = try Assets.init();
+    const level = try levels.generate(allocator, seed, &assets);
+
+    // TODO: Choose starting point better
+    const player_x = level.rooms.items[0].start_x + 2;
+    const player_y = level.rooms.items[0].start_y + 2;
 
     return .{
-        .player_pos = Vec{ .x = 7.5, .y = 5.0 },
+        .player_pos = Vec{ .x = @floatFromInt(player_x), .y = @floatFromInt(player_y) },
         .player_rot = 0.0,
 
-        .level = try levels.generate(allocator, &assets, 10, 10),
+        .level = level,
         .assets = assets,
     };
 }

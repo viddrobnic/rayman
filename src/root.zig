@@ -14,11 +14,11 @@ pub extern fn log_int(i32) void;
 // ---------------------------
 // Functions exported to wasm
 // ---------------------------
-pub export fn init() void {
+pub export fn init(seed: u32) void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    game = Game.init(allocator) catch {
+    game = Game.init(allocator, seed) catch {
         @panic("Failed to initialize game");
     };
 }
