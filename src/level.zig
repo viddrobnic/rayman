@@ -59,6 +59,8 @@ pub fn generate(allocator: std.mem.Allocator, seed: u64, assets: *const Assets) 
         }
     }
 
+    connect_rooms(rooms.items, tiles.items, rand, assets);
+
     return .{
         .width = SIZE,
         .height = SIZE,
@@ -94,4 +96,121 @@ fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand
         .width = width,
         .height = height,
     };
+}
+
+fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const Assets) void {
+    const MAX_ROOMS = GRID_SIZE * GRID_SIZE;
+
+    // Indices of rooms in graph. Start with random room index.
+    var in_graph: [MAX_ROOMS]usize = undefined;
+    in_graph[0] = rand.uintLessThan(usize, MAX_ROOMS);
+
+    // Number of rooms in graph.
+    var nr_in_graph: usize = 1;
+
+    while (nr_in_graph < MAX_ROOMS) {
+        // Pick random room in graph.
+        const idx_1 = in_graph[rand.uintLessThan(usize, nr_in_graph)];
+
+        // Pick random neighbor not in graph
+        var buffer: [MAX_ROOMS]usize = undefined;
+        var neighbours = get_neighbours(idx_1, &buffer);
+
+        // Remove neighbors already in graph
+        var i: usize = 0;
+        while (i < neighbours.len) {
+            if (contains(usize, &in_graph, neighbours[i])) {
+                neighbours[i] = neighbours[neighbours.len - 1];
+                neighbours = neighbours[0 .. neighbours.len - 1];
+            } else {
+                i += 1;
+            }
+        }
+
+        // There are no neighbors outside the graph.
+        // We start from a different room
+        if (neighbours.len == 0) {
+            continue;
+        }
+
+        const idx_2 = neighbours[rand.uintLessThan(usize, neighbours.len)];
+
+        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
+
+        in_graph[nr_in_graph] = idx_2;
+        nr_in_graph += 1;
+    }
+}
+
+fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, assets: *const Assets) void {
+    // TODO: Make connections correct.
+    const start_idx = @min(idx_1, idx_2);
+    const end_idx = @max(idx_1, idx_2);
+    const start = rooms[start_idx];
+    const end = rooms[end_idx];
+
+    // Horizontal
+    if (end_idx - start_idx == 1) {
+        const start_x = start.start_x + start.width;
+        const end_x = end.start_x + 1;
+        const y = start.start_y + start.height / 2;
+        for (start_x..end_x) |x| {
+            tiles[y * SIZE + x] = .{ .empty = .{
+                .floor = &assets.floor1,
+                .ceiling = &assets.floor2,
+            } };
+        }
+    }
+    // Vertial
+    else {
+        const start_y = start.start_y + start.height;
+        const end_y = end.start_y + 1;
+        const x = start.start_x + start.width / 2;
+        for (start_y..end_y) |y| {
+            tiles[y * SIZE + x] = .{ .empty = .{
+                .floor = &assets.floor1,
+                .ceiling = &assets.floor2,
+            } };
+        }
+    }
+}
+
+fn get_neighbours(idx: usize, buffer: []usize) []usize {
+    var i: usize = 0;
+
+    // Down
+    if (idx >= GRID_SIZE) {
+        buffer[i] = idx - GRID_SIZE;
+        i += 1;
+    }
+
+    // Up
+    if (idx + GRID_SIZE < GRID_SIZE * GRID_SIZE) {
+        buffer[i] = idx + GRID_SIZE;
+        i += 1;
+    }
+
+    // Left
+    if (idx % GRID_SIZE != 0) {
+        buffer[i] = idx - 1;
+        i += 1;
+    }
+
+    // Right
+    if (idx % GRID_SIZE != GRID_SIZE - 1) {
+        buffer[i] = idx + 1;
+        i += 1;
+    }
+
+    return buffer[0..i];
+}
+
+fn contains(comptime T: type, slice: []T, elt: T) bool {
+    for (slice) |val| {
+        if (val == elt) {
+            return true;
+        }
+    }
+
+    return false;
 }
