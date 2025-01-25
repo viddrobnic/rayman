@@ -4,7 +4,7 @@ const Image = @import("assets/image.zig").Image;
 
 const GRID_SIZE = 3;
 const SIZE = 60;
-const MIN_ROOM_SIZE = 10;
+const MIN_ROOM_SIZE = 5;
 const MIN_PADDING = 2;
 
 pub const Tile = union(enum) {
@@ -72,11 +72,11 @@ fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand
     const start_x = room_x * room_size;
     const start_y = room_y * room_size;
 
-    const offset_x = rand.intRangeAtMost(usize, MIN_PADDING, room_size - MIN_ROOM_SIZE - MIN_PADDING);
-    const offset_y = rand.intRangeAtMost(usize, MIN_PADDING, room_size - MIN_ROOM_SIZE - MIN_PADDING);
+    const width = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - 2 * MIN_PADDING);
+    const height = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - 2 * MIN_PADDING);
 
-    const width = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - offset_x - MIN_PADDING);
-    const height = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - offset_y - MIN_PADDING);
+    const offset_x = rand.intRangeAtMost(usize, MIN_PADDING, room_size - width - MIN_PADDING);
+    const offset_y = rand.intRangeAtMost(usize, MIN_PADDING, room_size - height - MIN_PADDING);
 
     for ((start_y + offset_y)..(start_y + offset_y + height)) |y| {
         for ((start_x + offset_x)..(start_x + offset_x + width)) |x| {
