@@ -6,6 +6,7 @@ const GRID_SIZE = 3;
 const SIZE = 60;
 const MIN_ROOM_SIZE = 5;
 const MIN_PADDING = 2;
+const MAX_EXTRA_TUNNELS = 3;
 
 pub const Tile = union(enum) {
     wall: *const Image,
@@ -108,12 +109,19 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
     // Number of rooms in graph.
     var nr_in_graph: usize = 1;
 
+    var connections: [MAX_ROOMS][MAX_ROOMS]bool = undefined;
+    for (connections, 0..) |_, i| {
+        @memset(&connections[i], false);
+    }
+
+    // Buffer used to get neighbors in the future.
+    var buffer: [MAX_ROOMS]usize = undefined;
+
     while (nr_in_graph < MAX_ROOMS) {
         // Pick random room in graph.
         const idx_1 = in_graph[rand.uintLessThan(usize, nr_in_graph)];
 
         // Pick random neighbor not in graph
-        var buffer: [MAX_ROOMS]usize = undefined;
         var neighbours = get_neighbours(idx_1, &buffer);
 
         // Remove neighbors already in graph
@@ -134,11 +142,45 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         }
 
         const idx_2 = neighbours[rand.uintLessThan(usize, neighbours.len)];
-
-        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
-
         in_graph[nr_in_graph] = idx_2;
         nr_in_graph += 1;
+        connections[idx_1][idx_2] = true;
+        connections[idx_2][idx_1] = true;
+
+        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
+    }
+
+    // Add some random connections
+    const nr_extra_cons = rand.intRangeAtMost(usize, 1, MAX_EXTRA_TUNNELS);
+    var added_cons: usize = 0;
+    while (added_cons < nr_extra_cons) {
+        // Pick random room
+        const idx_1 = in_graph[rand.uintLessThan(usize, nr_in_graph)];
+
+        // Get neighbors
+        var neighbors = get_neighbours(idx_1, &buffer);
+
+        // Remove neighbors already connected.
+        var i: usize = 0;
+        while (i < neighbors.len) {
+            if (connections[idx_1][neighbors[i]]) {
+                neighbors[i] = neighbors[neighbors.len - 1];
+                neighbors = neighbors[0 .. neighbors.len - 1];
+            } else {
+                i += 1;
+            }
+        }
+
+        if (neighbors.len == 0) {
+            continue;
+        }
+
+        const idx_2 = neighbors[rand.uintLessThan(usize, neighbors.len)];
+        connections[idx_1][idx_2] = true;
+        connections[idx_2][idx_1] = true;
+        added_cons += 1;
+
+        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
     }
 }
 
