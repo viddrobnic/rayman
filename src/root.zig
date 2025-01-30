@@ -15,7 +15,9 @@ pub extern fn log_int(i32) void;
 // Functions exported to wasm
 // ---------------------------
 pub export fn init(seed: u32) void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{
+        .safety = false,
+    }){};
     const allocator = gpa.allocator();
 
     game = Game.init(allocator, seed) catch {
@@ -34,4 +36,9 @@ pub export fn set_size(width: usize, height: usize) void {
 
 pub export fn update(dt: f32, w_pressed: bool, a_pressed: bool, s_pressed: bool, d_pressed: bool) void {
     game.update(dt, w_pressed, a_pressed, s_pressed, d_pressed);
+}
+
+test "render once" {
+    init(2);
+    draw();
 }

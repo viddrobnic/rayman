@@ -24,8 +24,8 @@ pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
     const level = try levels.generate(allocator, seed, &assets);
 
     // TODO: Choose starting point better
-    const player_x = level.rooms.items[0].start_x + 2;
-    const player_y = level.rooms.items[0].start_y + 2;
+    const player_x = level.rooms.items[0].start_x + 1;
+    const player_y = level.rooms.items[0].start_y + 1;
 
     return .{
         .player_pos = Vec{ .x = @floatFromInt(player_x), .y = @floatFromInt(player_y) },

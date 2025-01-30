@@ -46,7 +46,7 @@ pub fn build(b: *std.Build) void {
     const module = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
-        .optimize = .ReleaseSmall,
+        .optimize = .ReleaseSafe,
     });
 
     // Module for testing

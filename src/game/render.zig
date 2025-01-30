@@ -53,6 +53,9 @@ fn render_floor_ceil(game: *const Game, camera: Camera) void {
             const position = left.add(&diff.scalar_mul(step));
 
             // Get tile on the map
+            if (position.x < 0 or position.y < 0) {
+                continue;
+            }
             const tile = game.level.get_tile(@intFromFloat(position.x), @intFromFloat(position.y));
             if (tile == null) {
                 continue;
