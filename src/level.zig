@@ -186,7 +186,6 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
 }
 
 fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: std.Random, assets: *const Assets) void {
-    // TODO: Make connections correct.
     const start_idx = @min(idx_1, idx_2);
     const end_idx = @max(idx_1, idx_2);
     const start = rooms[start_idx];
@@ -247,24 +246,25 @@ fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: s
     }
 
     const turn_point = rand.intRangeLessThan(usize, 1, distance - 1);
+    var pos = start_pos;
     for (0..distance) |d| {
         if (d == turn_point) {
             for (0..turn_distance) |_| {
-                tiles[start_pos.y * SIZE + start_pos.x] = .{ .empty = .{
+                tiles[pos.y * SIZE + pos.x] = .{ .empty = .{
                     .floor = &assets.floor1,
                     .ceiling = &assets.floor2,
                 } };
-                start_pos.x = @intCast(@as(i32, @intCast(start_pos.x)) + turn_step.x);
-                start_pos.y = @intCast(@as(i32, @intCast(start_pos.y)) + turn_step.y);
+                pos.x = @intCast(@as(i32, @intCast(pos.x)) + turn_step.x);
+                pos.y = @intCast(@as(i32, @intCast(pos.y)) + turn_step.y);
             }
         }
 
-        tiles[start_pos.y * SIZE + start_pos.x] = .{ .empty = .{
+        tiles[pos.y * SIZE + pos.x] = .{ .empty = .{
             .floor = &assets.floor1,
             .ceiling = &assets.floor2,
         } };
-        start_pos.x += move_step.x;
-        start_pos.y += move_step.y;
+        pos.x += move_step.x;
+        pos.y += move_step.y;
     }
 }
 
