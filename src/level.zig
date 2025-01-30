@@ -128,7 +128,7 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         // Remove neighbors already in graph
         var i: usize = 0;
         while (i < neighbours.len) {
-            if (contains(usize, &in_graph, neighbours[i])) {
+            if (contains(usize, in_graph[0..nr_in_graph], neighbours[i])) {
                 neighbours[i] = neighbours[neighbours.len - 1];
                 neighbours = neighbours[0 .. neighbours.len - 1];
             } else {
