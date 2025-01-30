@@ -1,6 +1,7 @@
 const std = @import("std");
 const Assets = @import("assets/assets.zig");
 const Image = @import("assets/image.zig").Image;
+const Vec = @import("vec.zig").Vec;
 
 const GRID_SIZE = 3;
 const SIZE = 60;
@@ -147,7 +148,7 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         connections[idx_1][idx_2] = true;
         connections[idx_2][idx_1] = true;
 
-        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
+        draw_tunnel(rooms, tiles, idx_1, idx_2, rand, assets);
     }
 
     // Add some random connections
@@ -180,40 +181,90 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         connections[idx_2][idx_1] = true;
         added_cons += 1;
 
-        draw_tunnel(rooms, tiles, idx_1, idx_2, assets);
+        draw_tunnel(rooms, tiles, idx_1, idx_2, rand, assets);
     }
 }
 
-fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, assets: *const Assets) void {
+fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: std.Random, assets: *const Assets) void {
     // TODO: Make connections correct.
     const start_idx = @min(idx_1, idx_2);
     const end_idx = @max(idx_1, idx_2);
     const start = rooms[start_idx];
     const end = rooms[end_idx];
 
+    var start_pos: Vec(usize) = undefined;
+    var end_pos: Vec(usize) = undefined;
+    var move_step: Vec(usize) = undefined;
+    var turn_step: Vec(i32) = undefined;
+    var distance: usize = undefined;
+    var turn_distance: usize = undefined;
+
     // Horizontal
     if (end_idx - start_idx == 1) {
         const start_x = start.start_x + start.width;
-        const end_x = end.start_x + 1;
-        const y = start.start_y + start.height / 2;
-        for (start_x..end_x) |x| {
-            tiles[y * SIZE + x] = .{ .empty = .{
-                .floor = &assets.floor1,
-                .ceiling = &assets.floor2,
-            } };
+        const end_x = end.start_x - 1;
+        distance = end_x - start_x + 1;
+
+        const start_y = start.start_y + rand.uintLessThan(usize, start.height);
+        const end_y = end.start_y + rand.uintLessThan(usize, end.height);
+
+        var turn_y: i32 = undefined;
+        if (start_y < end_y) {
+            turn_y = 1;
+            turn_distance = end_y - start_y;
+        } else {
+            turn_y = -1;
+            turn_distance = start_y - end_y;
         }
+
+        start_pos = .{ .x = start_x, .y = start_y };
+        end_pos = .{ .x = end_x, .y = end_y };
+        move_step = .{ .x = 1, .y = 0 };
+        turn_step = .{ .x = 0, .y = turn_y };
     }
-    // Vertial
+    // Vertical
     else {
         const start_y = start.start_y + start.height;
-        const end_y = end.start_y + 1;
-        const x = start.start_x + start.width / 2;
-        for (start_y..end_y) |y| {
-            tiles[y * SIZE + x] = .{ .empty = .{
-                .floor = &assets.floor1,
-                .ceiling = &assets.floor2,
-            } };
+        const end_y = end.start_y - 1;
+        distance = end_y - start_y + 1;
+
+        const start_x = start.start_x + rand.uintLessThan(usize, start.width);
+        const end_x = end.start_x + rand.uintLessThan(usize, end.width);
+
+        var turn_x: i32 = undefined;
+        if (start_x < end_x) {
+            turn_x = 1;
+            turn_distance = end_x - start_x;
+        } else {
+            turn_x = -1;
+            turn_distance = start_x - end_x;
         }
+
+        start_pos = .{ .x = start_x, .y = start_y };
+        end_pos = .{ .x = end_x, .y = end_y };
+        move_step = .{ .x = 0, .y = 1 };
+        turn_step = .{ .x = turn_x, .y = 0 };
+    }
+
+    const turn_point = rand.intRangeLessThan(usize, 1, distance - 1);
+    for (0..distance) |d| {
+        if (d == turn_point) {
+            for (0..turn_distance) |_| {
+                tiles[start_pos.y * SIZE + start_pos.x] = .{ .empty = .{
+                    .floor = &assets.floor1,
+                    .ceiling = &assets.floor2,
+                } };
+                start_pos.x = @intCast(@as(i32, @intCast(start_pos.x)) + turn_step.x);
+                start_pos.y = @intCast(@as(i32, @intCast(start_pos.y)) + turn_step.y);
+            }
+        }
+
+        tiles[start_pos.y * SIZE + start_pos.x] = .{ .empty = .{
+            .floor = &assets.floor1,
+            .ceiling = &assets.floor2,
+        } };
+        start_pos.x += move_step.x;
+        start_pos.y += move_step.y;
     }
 }
 
