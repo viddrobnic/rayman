@@ -1,5 +1,5 @@
 const std = @import("std");
-const Assets = @import("assets/assets.zig");
+const assets = @import("assets/assets.zig");
 const Image = @import("assets/image.zig").Image;
 const Vec = @import("vec.zig").Vec;
 
@@ -43,7 +43,10 @@ pub const Level = struct {
     }
 };
 
-pub fn generate(allocator: std.mem.Allocator, seed: u64, assets: *const Assets) !Level {
+pub fn generate(
+    allocator: std.mem.Allocator,
+    seed: u64,
+) !Level {
     var prng = std.Random.DefaultPrng.init(seed);
     const rand = prng.random();
 
@@ -56,12 +59,12 @@ pub fn generate(allocator: std.mem.Allocator, seed: u64, assets: *const Assets) 
 
     for (0..GRID_SIZE) |room_y| {
         for (0..GRID_SIZE) |room_x| {
-            const room = generate_room(&tiles, room_x, room_y, rand, assets);
+            const room = generate_room(&tiles, room_x, room_y, rand);
             try rooms.append(room);
         }
     }
 
-    connect_rooms(rooms.items, tiles.items, rand, assets);
+    connect_rooms(rooms.items, tiles.items, rand);
 
     return .{
         .width = SIZE,
@@ -71,7 +74,7 @@ pub fn generate(allocator: std.mem.Allocator, seed: u64, assets: *const Assets) 
     };
 }
 
-fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand: std.Random, assets: *const Assets) Room {
+fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand: std.Random) Room {
     const room_size = SIZE / GRID_SIZE;
     const start_x = room_x * room_size;
     const start_y = room_y * room_size;
@@ -100,7 +103,7 @@ fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand
     };
 }
 
-fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const Assets) void {
+fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random) void {
     const MAX_ROOMS = GRID_SIZE * GRID_SIZE;
 
     // Indices of rooms in graph. Start with random room index.
@@ -148,7 +151,7 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         connections[idx_1][idx_2] = true;
         connections[idx_2][idx_1] = true;
 
-        draw_tunnel(rooms, tiles, idx_1, idx_2, rand, assets);
+        draw_tunnel(rooms, tiles, idx_1, idx_2, rand);
     }
 
     // Add some random connections
@@ -181,11 +184,11 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random, assets: *const 
         connections[idx_2][idx_1] = true;
         added_cons += 1;
 
-        draw_tunnel(rooms, tiles, idx_1, idx_2, rand, assets);
+        draw_tunnel(rooms, tiles, idx_1, idx_2, rand);
     }
 }
 
-fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: std.Random, assets: *const Assets) void {
+fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: std.Random) void {
     const start_idx = @min(idx_1, idx_2);
     const end_idx = @max(idx_1, idx_2);
     const start = rooms[start_idx];

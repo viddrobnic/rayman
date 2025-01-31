@@ -3,6 +3,7 @@ const screen = @import("screen.zig");
 
 const Game = @import("game/game.zig");
 const render = @import("game/render.zig");
+const assets = @import("assets/assets.zig");
 
 var game: Game = undefined;
 
@@ -19,6 +20,10 @@ pub export fn init(seed: u32) void {
         .safety = false,
     }){};
     const allocator = gpa.allocator();
+
+    assets.init() catch {
+        @panic("Failed to initialize assets");
+    };
 
     game = Game.init(allocator, seed) catch {
         @panic("Failed to initialize game");
