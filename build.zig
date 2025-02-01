@@ -25,8 +25,8 @@ pub fn build(b: *std.Build) void {
 
     const assets = [_]AssetPackMapping{
         .{
-            .input = "assets/block.jpg",
-            .output = "asset_block",
+            .input = "assets/tiles.png",
+            .output = "tiles",
         },
     };
     var asset_outputs: [assets.len]std.Build.LazyPath = undefined;

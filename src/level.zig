@@ -52,7 +52,12 @@ pub fn generate(
 
     var tiles = try std.ArrayList(Tile).initCapacity(allocator, SIZE * SIZE);
     for (0..SIZE * SIZE) |_| {
-        try tiles.append(.{ .wall = &assets.red });
+        const rdx = rand.uintLessThan(u8, 10);
+        if (rdx == 0) {
+            try tiles.append(.{ .wall = &assets.wall2 });
+        } else {
+            try tiles.append(.{ .wall = &assets.wall1 });
+        }
     }
 
     var rooms = try std.ArrayList(Room).initCapacity(allocator, GRID_SIZE * GRID_SIZE);
@@ -88,10 +93,7 @@ fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand
     for ((start_y + offset_y)..(start_y + offset_y + height)) |y| {
         for ((start_x + offset_x)..(start_x + offset_x + width)) |x| {
             const idx = y * SIZE + x;
-            tiles.items[idx] = .{ .empty = .{
-                .floor = &assets.floor1,
-                .ceiling = &assets.floor2,
-            } };
+            tiles.items[idx] = get_floor(rand);
         }
     }
 
@@ -253,19 +255,13 @@ fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: s
     for (0..distance) |d| {
         if (d == turn_point) {
             for (0..turn_distance) |_| {
-                tiles[pos.y * SIZE + pos.x] = .{ .empty = .{
-                    .floor = &assets.floor1,
-                    .ceiling = &assets.floor2,
-                } };
+                tiles[pos.y * SIZE + pos.x] = get_floor(rand);
                 pos.x = @intCast(@as(i32, @intCast(pos.x)) + turn_step.x);
                 pos.y = @intCast(@as(i32, @intCast(pos.y)) + turn_step.y);
             }
         }
 
-        tiles[pos.y * SIZE + pos.x] = .{ .empty = .{
-            .floor = &assets.floor1,
-            .ceiling = &assets.floor2,
-        } };
+        tiles[pos.y * SIZE + pos.x] = get_floor(rand);
         pos.x += move_step.x;
         pos.y += move_step.y;
     }
@@ -309,4 +305,26 @@ fn contains(comptime T: type, slice: []T, elt: T) bool {
     }
 
     return false;
+}
+
+fn get_floor(rand: std.Random) Tile {
+    const rdx = rand.uintLessThan(u8, 20);
+
+    const floor_img = switch (rdx) {
+        0 => &assets.floor2,
+        1 => &assets.floor3,
+        2 => &assets.floor4,
+        3 => &assets.floor5,
+        else => &assets.floor1,
+    };
+
+    var ceil_img = &assets.ceiling1;
+    if (rdx < 3) {
+        ceil_img = &assets.ceiling2;
+    }
+
+    return .{ .empty = .{
+        .floor = floor_img,
+        .ceiling = ceil_img,
+    } };
 }
