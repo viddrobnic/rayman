@@ -16,6 +16,8 @@ pub var ceiling2: image.Image = undefined;
 pub var wall1: image.Image = undefined;
 pub var wall2: image.Image = undefined;
 
+pub var door: image.Image = undefined;
+
 pub fn init() !void {
     floor1 = try image.from_asset_pack(tiles_data, 16, 16, 0, 0);
     floor2 = try image.from_asset_pack(tiles_data, 16, 16, 1, 0);
@@ -28,4 +30,6 @@ pub fn init() !void {
 
     wall1 = try image.from_asset_pack(tiles_data, 16, 16, 2, 1);
     wall2 = try image.from_asset_pack(tiles_data, 16, 16, 3, 1);
+
+    door = try image.from_asset_pack(tiles_data, 16, 16, 4, 1);
 }

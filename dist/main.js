@@ -15,6 +15,7 @@ const pressed_keys = {
   a: false,
   s: false,
   d: false,
+  space: false,
 };
 document.onkeydown = function (e) {
   switch (e.key) {
@@ -29,6 +30,9 @@ document.onkeydown = function (e) {
       break;
     case "d":
       pressed_keys.d = true;
+      break;
+    case " ":
+      pressed_keys.space = true;
       break;
   }
 };
@@ -46,6 +50,9 @@ document.onkeyup = function (e) {
       break;
     case "d":
       pressed_keys.d = false;
+      break;
+    case " ":
+      pressed_keys.space = false;
       break;
   }
 };
@@ -126,6 +133,7 @@ export async function main() {
       pressed_keys.a,
       pressed_keys.s,
       pressed_keys.d,
+      pressed_keys.space,
     );
     draw(now / 1000.0);
 

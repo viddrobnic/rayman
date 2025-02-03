@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const levels = @import("../level.zig");
+const levels = @import("../level/level.zig");
 
 const vec_from_polar = @import("../vec.zig").from_polar;
 const Vec = @import("../vec.zig").Vec(f32);
@@ -32,7 +32,15 @@ pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
     };
 }
 
-pub fn update(self: *Self, dt: f32, w_pressed: bool, a_pressed: bool, s_pressed: bool, d_pressed: bool) void {
+pub fn update(
+    self: *Self,
+    dt: f32,
+    w_pressed: bool,
+    a_pressed: bool,
+    s_pressed: bool,
+    d_pressed: bool,
+    space_pressed: bool,
+) void {
     // Rotate the player
     if (a_pressed) {
         self.player_rot += ROTATION_SPEED * dt;
@@ -42,6 +50,20 @@ pub fn update(self: *Self, dt: f32, w_pressed: bool, a_pressed: bool, s_pressed:
     self.player_rot = @mod(self.player_rot, 2.0 * std.math.pi);
 
     // Move the player
+    self.move_player(dt, w_pressed, s_pressed);
+
+    // Handle space. For now it removes room door, later it will be attack.
+    if (space_pressed) {
+        self.level.clear_room(self.player_pos.x, self.player_pos.y);
+    }
+}
+
+fn move_player(
+    self: *Self,
+    dt: f32,
+    w_pressed: bool,
+    s_pressed: bool,
+) void {
     const direction = vec_from_polar(self.player_rot);
     var move_vec: ?Vec = null;
     if (w_pressed) {

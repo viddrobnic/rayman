@@ -73,7 +73,7 @@ fn render_floor_ceil(game: *const Game, camera: Camera) void {
                     floor_color = empty.floor.get_pixel(text_x, text_y);
                     ceil_color = empty.ceiling.get_pixel(text_x, text_y);
                 },
-                .wall => {
+                .wall, .door => {
                     floor_color = Color.new(0, 0, 0);
                     ceil_color = Color.new(0, 0, 0);
                 },
@@ -167,8 +167,12 @@ fn render_walls(game: *const Game, camera: Camera) void {
 
             // Check if we hit a wall.
             const tile = game.level.get_tile(@intCast(tile_idx.x), @intCast(tile_idx.y));
-            if (tile != null and tile.? == .wall) {
-                wall_texture = tile.?.wall;
+            if (tile != null and (tile.? == .wall or tile.? == .door)) {
+                wall_texture = switch (tile.?) {
+                    .wall => |text| text,
+                    .door => |text| text,
+                    .empty => unreachable,
+                };
                 hit = true;
                 break;
             }

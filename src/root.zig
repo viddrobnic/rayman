@@ -39,8 +39,22 @@ pub export fn set_size(width: usize, height: usize) void {
     screen.height = height;
 }
 
-pub export fn update(dt: f32, w_pressed: bool, a_pressed: bool, s_pressed: bool, d_pressed: bool) void {
-    game.update(dt, w_pressed, a_pressed, s_pressed, d_pressed);
+pub export fn update(
+    dt: f32,
+    w_pressed: bool,
+    a_pressed: bool,
+    s_pressed: bool,
+    d_pressed: bool,
+    space_pressed: bool,
+) void {
+    game.update(
+        dt,
+        w_pressed,
+        a_pressed,
+        s_pressed,
+        d_pressed,
+        space_pressed,
+    );
 }
 
 test "render once" {

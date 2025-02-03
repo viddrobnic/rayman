@@ -1,57 +1,18 @@
 const std = @import("std");
-const assets = @import("assets/assets.zig");
-const Image = @import("assets/image.zig").Image;
-const Vec = @import("vec.zig").Vec;
 
-const GRID_SIZE = 3;
-const SIZE = 60;
-const MIN_ROOM_SIZE = 5;
-const MIN_PADDING = 2;
-const MAX_EXTRA_TUNNELS = 3;
-
-pub const Tile = union(enum) {
-    wall: *const Image,
-    empty: struct {
-        floor: *const Image,
-        ceiling: *const Image,
-    },
-};
-
-pub const Room = struct {
-    start_x: usize,
-    start_y: usize,
-    width: usize,
-    height: usize,
-};
-
-pub const Level = struct {
-    width: usize,
-    height: usize,
-
-    tiles: std.ArrayList(Tile),
-
-    rooms: std.ArrayList(Room),
-
-    const Self = @This();
-
-    pub fn get_tile(self: *const Self, x: usize, y: usize) ?Tile {
-        if (x >= self.width or y >= self.height) {
-            return null;
-        }
-
-        return self.tiles.items[y * self.width + x];
-    }
-};
+const level = @import("level.zig");
+const assets = @import("../assets/assets.zig");
+const Vec = @import("../vec.zig").Vec;
 
 pub fn generate(
     allocator: std.mem.Allocator,
     seed: u64,
-) !Level {
+) !level.Level {
     var prng = std.Random.DefaultPrng.init(seed);
     const rand = prng.random();
 
-    var tiles = try std.ArrayList(Tile).initCapacity(allocator, SIZE * SIZE);
-    for (0..SIZE * SIZE) |_| {
+    var tiles = try std.ArrayList(level.Tile).initCapacity(allocator, level.SIZE * level.SIZE);
+    for (0..level.SIZE * level.SIZE) |_| {
         const rdx = rand.uintLessThan(u8, 10);
         if (rdx == 0) {
             try tiles.append(.{ .wall = &assets.wall2 });
@@ -60,10 +21,10 @@ pub fn generate(
         }
     }
 
-    var rooms = try std.ArrayList(Room).initCapacity(allocator, GRID_SIZE * GRID_SIZE);
+    var rooms = try std.ArrayList(level.Room).initCapacity(allocator, level.GRID_SIZE * level.GRID_SIZE);
 
-    for (0..GRID_SIZE) |room_y| {
-        for (0..GRID_SIZE) |room_x| {
+    for (0..level.GRID_SIZE) |room_y| {
+        for (0..level.GRID_SIZE) |room_x| {
             const room = generate_room(&tiles, room_x, room_y, rand);
             try rooms.append(room);
         }
@@ -72,27 +33,27 @@ pub fn generate(
     connect_rooms(rooms.items, tiles.items, rand);
 
     return .{
-        .width = SIZE,
-        .height = SIZE,
+        .width = level.SIZE,
+        .height = level.SIZE,
         .tiles = tiles,
         .rooms = rooms,
     };
 }
 
-fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand: std.Random) Room {
-    const room_size = SIZE / GRID_SIZE;
+fn generate_room(tiles: *std.ArrayList(level.Tile), room_x: usize, room_y: usize, rand: std.Random) level.Room {
+    const room_size = level.SIZE / level.GRID_SIZE;
     const start_x = room_x * room_size;
     const start_y = room_y * room_size;
 
-    const width = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - 2 * MIN_PADDING);
-    const height = rand.intRangeAtMost(usize, MIN_ROOM_SIZE, room_size - 2 * MIN_PADDING);
+    const width = rand.intRangeAtMost(usize, level.MIN_ROOM_SIZE, room_size - 2 * level.MIN_PADDING);
+    const height = rand.intRangeAtMost(usize, level.MIN_ROOM_SIZE, room_size - 2 * level.MIN_PADDING);
 
-    const offset_x = rand.intRangeAtMost(usize, MIN_PADDING, room_size - width - MIN_PADDING);
-    const offset_y = rand.intRangeAtMost(usize, MIN_PADDING, room_size - height - MIN_PADDING);
+    const offset_x = rand.intRangeAtMost(usize, level.MIN_PADDING, room_size - width - level.MIN_PADDING);
+    const offset_y = rand.intRangeAtMost(usize, level.MIN_PADDING, room_size - height - level.MIN_PADDING);
 
     for ((start_y + offset_y)..(start_y + offset_y + height)) |y| {
         for ((start_x + offset_x)..(start_x + offset_x + width)) |x| {
-            const idx = y * SIZE + x;
+            const idx = y * level.SIZE + x;
             tiles.items[idx] = get_floor(rand);
         }
     }
@@ -102,11 +63,13 @@ fn generate_room(tiles: *std.ArrayList(Tile), room_x: usize, room_y: usize, rand
         .start_y = start_y + offset_y,
         .width = width,
         .height = height,
+        .doors = [_]Vec(usize){.{ .x = 0, .y = 0 }} ** 8,
+        .nr_doors = 0,
     };
 }
 
-fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random) void {
-    const MAX_ROOMS = GRID_SIZE * GRID_SIZE;
+fn connect_rooms(rooms: []level.Room, tiles: []level.Tile, rand: std.Random) void {
+    const MAX_ROOMS = level.GRID_SIZE * level.GRID_SIZE;
 
     // Indices of rooms in graph. Start with random room index.
     var in_graph: [MAX_ROOMS]usize = undefined;
@@ -157,7 +120,7 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random) void {
     }
 
     // Add some random connections
-    const nr_extra_cons = rand.intRangeAtMost(usize, 1, MAX_EXTRA_TUNNELS);
+    const nr_extra_cons = rand.intRangeAtMost(usize, 1, level.MAX_EXTRA_TUNNELS);
     var added_cons: usize = 0;
     while (added_cons < nr_extra_cons) {
         // Pick random room
@@ -190,11 +153,11 @@ fn connect_rooms(rooms: []Room, tiles: []Tile, rand: std.Random) void {
     }
 }
 
-fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: std.Random) void {
+fn draw_tunnel(rooms: []level.Room, tiles: []level.Tile, idx_1: usize, idx_2: usize, rand: std.Random) void {
     const start_idx = @min(idx_1, idx_2);
     const end_idx = @max(idx_1, idx_2);
-    const start = rooms[start_idx];
-    const end = rooms[end_idx];
+    var start = &rooms[start_idx];
+    var end = &rooms[end_idx];
 
     var start_pos: Vec(usize) = undefined;
     var end_pos: Vec(usize) = undefined;
@@ -250,46 +213,60 @@ fn draw_tunnel(rooms: []Room, tiles: []Tile, idx_1: usize, idx_2: usize, rand: s
         turn_step = .{ .x = turn_x, .y = 0 };
     }
 
+    // Add doors
+    start.doors[start.nr_doors] = start_pos;
+    start.doors[start.nr_doors + 1] = end_pos;
+    start.nr_doors += 2;
+
+    end.doors[end.nr_doors] = start_pos;
+    end.doors[end.nr_doors + 1] = end_pos;
+    end.nr_doors += 2;
+
+    // Add hallway
     const turn_point = rand.intRangeLessThan(usize, 1, distance - 1);
     var pos = start_pos;
     for (0..distance) |d| {
         if (d == turn_point) {
             for (0..turn_distance) |_| {
-                tiles[pos.y * SIZE + pos.x] = get_floor(rand);
+                tiles[pos.y * level.SIZE + pos.x] = get_floor(rand);
                 pos.x = @intCast(@as(i32, @intCast(pos.x)) + turn_step.x);
                 pos.y = @intCast(@as(i32, @intCast(pos.y)) + turn_step.y);
             }
         }
 
-        tiles[pos.y * SIZE + pos.x] = get_floor(rand);
+        tiles[pos.y * level.SIZE + pos.x] = get_floor(rand);
         pos.x += move_step.x;
         pos.y += move_step.y;
     }
+
+    // Add door tiles
+    tiles[start_pos.y * level.SIZE + start_pos.x] = .{ .door = &assets.door };
+    tiles[end_pos.y * level.SIZE + end_pos.x] = .{ .door = &assets.door };
 }
 
 fn get_neighbours(idx: usize, buffer: []usize) []usize {
     var i: usize = 0;
 
     // Down
-    if (idx >= GRID_SIZE) {
-        buffer[i] = idx - GRID_SIZE;
+    if (idx >= level.GRID_SIZE) {
+        buffer[i] = idx - level.GRID_SIZE;
         i += 1;
     }
 
     // Up
-    if (idx + GRID_SIZE < GRID_SIZE * GRID_SIZE) {
-        buffer[i] = idx + GRID_SIZE;
+    if (idx + level.GRID_SIZE < level.GRID_SIZE * level.GRID_SIZE) {
+        buffer[i] = idx + level.GRID_SIZE;
         i += 1;
     }
 
     // Left
-    if (idx % GRID_SIZE != 0) {
+    if (idx % level.GRID_SIZE != 0) {
         buffer[i] = idx - 1;
         i += 1;
     }
 
     // Right
-    if (idx % GRID_SIZE != GRID_SIZE - 1) {
+    if (idx % level.GRID_SIZE != level.GRID_SIZE - 1) {
         buffer[i] = idx + 1;
         i += 1;
     }
@@ -307,7 +284,7 @@ fn contains(comptime T: type, slice: []T, elt: T) bool {
     return false;
 }
 
-fn get_floor(rand: std.Random) Tile {
+fn get_floor(rand: std.Random) level.Tile {
     const rdx = rand.uintLessThan(u8, 20);
 
     const floor_img = switch (rdx) {
