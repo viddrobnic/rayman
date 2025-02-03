@@ -27,8 +27,10 @@ pub fn render(game: *const Game) void {
     render_floor_ceil(game, camera);
     render_walls(game, camera);
 
-    text.render_text("You need a key", .{ .x = 0.3, .y = 0.45 }, 0.05);
-    text.render_text("to open the door", .{ .x = 0.28, .y = 0.51 }, 0.05);
+    if (game.show_help_msg) {
+        text.render_text("You need a key", .{ .x = 0.3, .y = 0.45 }, 0.05);
+        text.render_text("to open the doors", .{ .x = 0.28, .y = 0.51 }, 0.05);
+    }
 }
 
 fn render_floor_ceil(game: *const Game, camera: Camera) void {

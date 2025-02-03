@@ -15,6 +15,10 @@ player_rot: f32,
 
 level: levels.Level,
 
+time: f32 = 0.0,
+
+show_help_msg: bool = true,
+
 const Self = @This();
 
 pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
@@ -41,6 +45,11 @@ pub fn update(
     d_pressed: bool,
     space_pressed: bool,
 ) void {
+    self.time += dt;
+    if (self.time >= 5.0) {
+        self.show_help_msg = false;
+    }
+
     // Rotate the player
     if (a_pressed) {
         self.player_rot += ROTATION_SPEED * dt;
