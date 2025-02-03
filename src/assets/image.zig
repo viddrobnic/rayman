@@ -26,6 +26,26 @@ pub const ImageData = struct {
             .alpha = self.pixels[idx + 3],
         };
     }
+
+    pub fn get_pixel_absolute(self: *const @This(), x: usize, y: usize) Color {
+        var x_idx = x;
+        var y_idx = y;
+
+        if (x >= self.width) {
+            x_idx = self.width - 1;
+        }
+        if (y >= self.height) {
+            y_idx = self.height - 1;
+        }
+
+        const idx = (y_idx * self.width + x_idx) * 4;
+        return Color{
+            .red = self.pixels[idx],
+            .green = self.pixels[idx + 1],
+            .blue = self.pixels[idx + 2],
+            .alpha = self.pixels[idx + 3],
+        };
+    }
 };
 
 pub const AssetPack = struct {
@@ -58,6 +78,26 @@ pub const AssetPack = struct {
             .alpha = self.pixels[idx + 3],
         };
     }
+
+    pub fn get_pixel_absolute(self: *const @This(), x: usize, y: usize) Color {
+        var x_idx = x;
+        var y_idx = x;
+
+        if (x >= self.tile_width) {
+            x_idx = self.tile_width - 1;
+        }
+        if (y >= self.tile_height) {
+            y_idx = self.tile_height - 1;
+        }
+
+        const idx = ((self.offset_y + y_idx) * self.width + self.offset_x + x_idx) * 4;
+        return Color{
+            .red = self.pixels[idx],
+            .green = self.pixels[idx + 1],
+            .blue = self.pixels[idx + 2],
+            .alpha = self.pixels[idx + 3],
+        };
+    }
 };
 
 pub const Image = union(enum) {
@@ -70,6 +110,14 @@ pub const Image = union(enum) {
             .color => |c| c,
             .image_data => |*data| data.get_pixel(x, y),
             .asset_pack => |*pack| pack.get_pixel(x, y),
+        };
+    }
+
+    pub fn get_pixel_absolute(self: *const @This(), x: usize, y: usize) Color {
+        return switch (self.*) {
+            .color => |c| c,
+            .image_data => |*data| data.get_pixel_absolute(x, y),
+            .asset_pack => |*pack| pack.get_pixel_absolute(x, y),
         };
     }
 };

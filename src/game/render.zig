@@ -4,6 +4,7 @@ const screen = @import("../screen.zig");
 const image = @import("../assets/image.zig");
 const Color = @import("../color.zig");
 const Game = @import("game.zig");
+const text = @import("render_text.zig");
 
 const vec = @import("../vec.zig");
 const Vec = vec.Vec;
@@ -25,6 +26,9 @@ pub fn render(game: *const Game) void {
 
     render_floor_ceil(game, camera);
     render_walls(game, camera);
+
+    text.render_text("You need a key", .{ .x = 0.3, .y = 0.45 }, 0.05);
+    text.render_text("to open the door", .{ .x = 0.28, .y = 0.51 }, 0.05);
 }
 
 fn render_floor_ceil(game: *const Game, camera: Camera) void {
@@ -169,8 +173,8 @@ fn render_walls(game: *const Game, camera: Camera) void {
             const tile = game.level.get_tile(@intCast(tile_idx.x), @intCast(tile_idx.y));
             if (tile != null and (tile.? == .wall or tile.? == .door)) {
                 wall_texture = switch (tile.?) {
-                    .wall => |text| text,
-                    .door => |text| text,
+                    .wall => |t| t,
+                    .door => |t| t,
                     .empty => unreachable,
                 };
                 hit = true;

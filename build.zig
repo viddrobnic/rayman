@@ -28,6 +28,10 @@ pub fn build(b: *std.Build) void {
             .input = "assets/tiles.png",
             .output = "tiles",
         },
+        .{
+            .input = "assets/font.png",
+            .output = "font",
+        },
     };
     var asset_outputs: [assets.len]std.Build.LazyPath = undefined;
 
