@@ -21,6 +21,8 @@ pub var door: image.Image = undefined;
 
 pub var font: image.Image = undefined;
 
+pub var gold: image.Image = undefined;
+
 pub fn init() !void {
     floor1 = try image.from_asset_pack(tiles_data, 16, 16, 0, 0);
     floor2 = try image.from_asset_pack(tiles_data, 16, 16, 1, 0);
@@ -37,4 +39,6 @@ pub fn init() !void {
     door = try image.from_asset_pack(tiles_data, 16, 16, 4, 1);
 
     font = try image.from_data(font_data);
+
+    gold = image.from_color(255, 0, 0);
 }

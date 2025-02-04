@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const levels = @import("../level/level.zig");
+const entity = @import("../entity/entity.zig");
 
 const vec_from_polar = @import("../vec.zig").from_polar;
 const Vec = @import("../vec.zig").Vec(f32);
@@ -14,6 +15,7 @@ player_pos: Vec,
 player_rot: f32,
 
 level: levels.Level,
+entities: std.ArrayList(entity.Entity),
 
 time: f32 = 0.0,
 
@@ -22,7 +24,8 @@ show_help_msg: bool = true,
 const Self = @This();
 
 pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
-    const level = try levels.generate(allocator, seed);
+    var entities = std.ArrayList(entity.Entity).init(allocator);
+    const level = try levels.generate(allocator, seed, &entities);
 
     // TODO: Choose starting point better
     const player_x = level.rooms.items[0].start_x + 1;
@@ -33,6 +36,7 @@ pub fn init(allocator: std.mem.Allocator, seed: u64) !Self {
         .player_rot = 0.0,
 
         .level = level,
+        .entities = entities,
     };
 }
 

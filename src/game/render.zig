@@ -5,6 +5,7 @@ const image = @import("../assets/image.zig");
 const Color = @import("../color.zig");
 const Game = @import("game.zig");
 const text = @import("render_text.zig");
+const entity = @import("../entity/entity.zig");
 
 const vec = @import("../vec.zig");
 const Vec = vec.Vec;
@@ -24,8 +25,11 @@ pub fn render(game: *const Game) void {
         .plane = camera_direction.rotate_90(),
     };
 
+    var z_buffer: [screen.MAX_WIDTH]f32 = undefined;
+
     render_floor_ceil(game, camera);
-    render_walls(game, camera);
+    render_walls(game, camera, &z_buffer);
+    render_entities(game, camera, &z_buffer);
 
     if (game.show_help_msg) {
         text.render_text("You need a key", .{ .x = 0.3, .y = 0.45 }, 0.05);
@@ -104,7 +108,7 @@ const HitDirection = enum {
     vertial,
 };
 
-fn render_walls(game: *const Game, camera: Camera) void {
+fn render_walls(game: *const Game, camera: Camera, z_buffer: []f32) void {
     const player_idx = Vec(i32){
         .x = @intFromFloat(game.player_pos.x),
         .y = @intFromFloat(game.player_pos.y),
@@ -196,10 +200,10 @@ fn render_walls(game: *const Game, camera: Camera) void {
         };
         const distance = distance_from_camera(game.player_pos, camera.plane, collision);
 
-        // TODO: Set z buffer
-        // for dx in 0..SCALE {
-        //   z_buffer[x + dx] = distance;
-        // }
+        // Set z buffer
+        for (0..screen.SCALE) |dx| {
+            z_buffer[x + dx] = distance;
+        }
 
         const texture_x = switch (hit_direction) {
             .horizontal => tile_rem.y,
@@ -207,6 +211,105 @@ fn render_walls(game: *const Game, camera: Camera) void {
         };
 
         draw_wall_column(x, wall_texture, texture_x, hit_direction, distance);
+    }
+}
+
+fn render_entities(game: *const Game, camera: Camera, z_buffer: []f32) void {
+    // Calculate distances from the camera.
+    for (game.entities.items) |*ent| {
+        const distance = distance_from_camera(
+            game.player_pos,
+            camera.plane,
+            ent.position,
+        );
+        ent.distance = distance;
+    }
+
+    // Sort by distance ascending. This way we first render the entities
+    // that are the farthest away, and then the ones that are the closest.
+    // Rendering them in this order makes them overlap correctly.
+    const lessThanFn = struct {
+        pub fn lessThanFn(_: void, a: entity.Entity, b: entity.Entity) bool {
+            return a.distance < b.distance;
+        }
+    }.lessThanFn;
+    std.sort.block(entity.Entity, game.entities.items, {}, lessThanFn);
+
+    // Draw the actual entities
+    for (game.entities.items) |ent| {
+        draw_entity(game, ent, camera, z_buffer);
+    }
+}
+
+fn draw_entity(game: *const Game, ent: entity.Entity, camera: Camera, z_buffer: []const f32) void {
+    // Vector between player position and entity.
+    const entity_vec = ent.position.sub(&game.player_pos);
+
+    // Vector to the left and right position of the entity.
+    const entity_left = entity_vec.add(&camera.plane.scalar_mul(ent.size.x / 2.0));
+    const entity_right = entity_vec.sub(&camera.plane.scalar_mul(ent.size.x / 2.0));
+
+    // Get start and end x coordinates
+    const start_x_opt = get_entity_screen_x(camera, entity_left);
+    const end_x_opt = get_entity_screen_x(camera, entity_right);
+
+    if (start_x_opt == null or end_x_opt == null) {
+        return;
+    }
+
+    var start_x = start_x_opt.?;
+    var end_x = end_x_opt.?;
+
+    // Check if on screen and clip to bounds if necessary.
+    if (end_x <= 0 or start_x >= screen.width) {
+        return;
+    }
+
+    const width: f32 = @floatFromInt(end_x - start_x); // Width before clipping, used for textures
+    const texture_x_offset = start_x;
+    start_x = @max(start_x, 0);
+    end_x = @min(end_x, @as(i32, @intCast(screen.width)));
+
+    // Calculate height on screen. Basic equation is same as for height of a wall.
+    const height: i32 = @intFromFloat(ent.size.y * @as(f32, @floatFromInt(screen.height)) / ent.distance);
+
+    // Calculate start and end y
+    const wall_height: i32 = @intFromFloat(@as(f32, @floatFromInt(screen.height)) / ent.distance * CAMERA_HEIGHT);
+
+    const offset: i32 = @intFromFloat(ent.floor_offset * @as(f32, @floatFromInt(wall_height)));
+    var end_y: i32 = @divTrunc(@as(i32, @intCast(screen.height)), 2) + @divTrunc(wall_height, 2) - offset + @divTrunc(height, 2);
+
+    var start_y = end_y - height;
+    const texture_y_offset = start_y;
+    start_y = @max(start_y, 0);
+    end_y = @min(end_y, @as(i32, @intCast(screen.height)));
+
+    // Render to screen.
+    var x = start_x;
+    while (x < end_x) : (x += screen.SCALE) {
+        // Check z buffer
+        if (ent.distance > z_buffer[@intCast(x)]) {
+            continue;
+        }
+
+        // Calculate text coords
+        const texture_x: f32 = @as(f32, @floatFromInt(x - texture_x_offset)) / width;
+
+        var y = start_y;
+        while (y < end_y) : (y += screen.SCALE) {
+            // Get color from texture
+            const texture_y: f32 = @as(f32, @floatFromInt(y - texture_y_offset)) / @as(f32, @floatFromInt(height));
+            const color = ent.texture.get_pixel(texture_x, texture_y);
+
+            // Draw the pixels
+            for (0..screen.SCALE) |dx| {
+                const pos_x: usize = @min(@as(usize, @intCast(x)) + dx, screen.width - 1);
+                for (0..screen.SCALE) |dy| {
+                    const pos_y = @min(@as(usize, @intCast(y)) + dy, screen.height - 1);
+                    screen.draw_pixel(pos_x, pos_y, color);
+                }
+            }
+        }
     }
 }
 
@@ -272,4 +375,33 @@ fn distance_from_camera(position: Vec(f32), direction: Vec(f32), point: Vec(f32)
     const denum = direction.length();
 
     return @abs(numerator) / denum;
+}
+
+// Calculates x in screen coordinates [0, WIDTH]
+fn get_entity_screen_x(
+    camera: Camera,
+    entity_pos: Vec(f32),
+) ?i32 {
+    // Calculate x in camera coordinates, x in [-CAMERA_WIDTH, CAMERA_WIDTH].
+    // diff = t * (camera_dir + camera_x * camera_plane)
+    // diff x t * (camera_dir + camera_x * camera_plane) = 0  where x is cross product
+    // diff x camera_dir + camera_x * diff x camera_plane = 0
+    //
+    // Because all vector are 2d, cross product will give us 3d vector (0, 0, w).
+    // In the following final formula, we are using cross product notation, but
+    // have in mind, that values are actually scalars (third component in cross product).
+    //
+    // camera_x = -(diff x camera_dir) / (diff x camera_plane)
+    const denumenator = entity_pos.x * camera.plane.y - entity_pos.y * camera.plane.x;
+    if (denumenator == 0.0) {
+        // If sprite is on the camera plane, we have division by 0.
+        return null;
+    }
+
+    const numerator = entity_pos.x * camera.direction.y - entity_pos.y * camera.direction.x;
+    const camera_x = numerator / denumenator;
+
+    // Transform x into pixel coordinates [0, WIDTH]
+    const x = (camera_x + CAMERA_WIDTH) / 2.0 / CAMERA_WIDTH * @as(f32, @floatFromInt(screen.width));
+    return @intFromFloat(x);
 }

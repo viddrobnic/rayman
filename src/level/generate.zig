@@ -1,12 +1,16 @@
 const std = @import("std");
 
+const entity = @import("../entity/entity.zig");
 const level = @import("level.zig");
 const assets = @import("../assets/assets.zig");
 const Vec = @import("../vec.zig").Vec;
 
+const entities = @import("entities.zig");
+
 pub fn generate(
     allocator: std.mem.Allocator,
     seed: u64,
+    entity_pool: *std.ArrayList(entity.Entity),
 ) !level.Level {
     var prng = std.Random.DefaultPrng.init(seed);
     const rand = prng.random();
@@ -27,6 +31,8 @@ pub fn generate(
         for (0..level.GRID_SIZE) |room_x| {
             const room = generate_room(&tiles, room_x, room_y, rand);
             try rooms.append(room);
+
+            try entities.generate_entities(&rooms.items[rooms.items.len - 1], entity_pool, rand);
         }
     }
 
