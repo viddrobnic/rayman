@@ -3,6 +3,7 @@ const image = @import("image.zig");
 const block_data = @embedFile("asset_block");
 const tiles_data = @embedFile("tiles");
 const font_data = @embedFile("font");
+const coin_data = @embedFile("coin");
 
 // Collection of shared assets.
 pub var floor1: image.Image = undefined;
@@ -40,5 +41,5 @@ pub fn init() !void {
 
     font = try image.from_data(font_data);
 
-    gold = image.from_color(255, 0, 0);
+    gold = try image.from_data(coin_data);
 }

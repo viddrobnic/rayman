@@ -69,6 +69,11 @@ pub fn update(
     if (space_pressed) {
         self.level.clear_room(self.player_pos.x, self.player_pos.y);
     }
+
+    // Update entities.
+    for (self.entities.items) |*ent| {
+        ent.update(self);
+    }
 }
 
 fn move_player(

@@ -300,6 +300,9 @@ fn draw_entity(game: *const Game, ent: entity.Entity, camera: Camera, z_buffer: 
             // Get color from texture
             const texture_y: f32 = @as(f32, @floatFromInt(y - texture_y_offset)) / @as(f32, @floatFromInt(height));
             const color = ent.texture.get_pixel(texture_x, texture_y);
+            if (color.alpha == 0) {
+                continue;
+            }
 
             // Draw the pixels
             for (0..screen.SCALE) |dx| {
