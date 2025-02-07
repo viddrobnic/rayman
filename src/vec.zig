@@ -23,6 +23,10 @@ pub fn Vec(comptime T: type) type {
             return @sqrt(self.x * self.x + self.y * self.y);
         }
 
+        pub fn length_squared(self: *const Self) T {
+            return self.x * self.x + self.y * self.y;
+        }
+
         pub fn add(self: *const Self, other: *const Self) Self {
             return .{
                 .x = self.x + other.x,

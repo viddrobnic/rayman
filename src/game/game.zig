@@ -14,6 +14,8 @@ const PLAYER_BOUND_MARGIN = 0.1;
 player_pos: Vec,
 player_rot: f32,
 
+coins: u16 = 0,
+
 level: levels.Level,
 entities: std.ArrayList(entity.Entity),
 
@@ -47,7 +49,7 @@ pub fn update(
     a_pressed: bool,
     s_pressed: bool,
     d_pressed: bool,
-    space_pressed: bool,
+    _: bool,
 ) void {
     self.time += dt;
     if (self.time >= 5.0) {
@@ -65,15 +67,22 @@ pub fn update(
     // Move the player
     self.move_player(dt, w_pressed, s_pressed);
 
-    // Handle space. For now it removes room door, later it will be attack.
-    if (space_pressed) {
-        self.level.clear_room(self.player_pos.x, self.player_pos.y);
-    }
-
     // Update entities.
-    for (self.entities.items) |*ent| {
-        ent.update(self);
+    var i: usize = 0;
+    while (i < self.entities.items.len) {
+        const ent = &self.entities.items[i];
+        const should_delete = ent.update_fn(ent, self);
+        if (should_delete) {
+            self.entities.items[i] = self.entities.items[self.entities.items.len - 1];
+            _ = self.entities.pop();
+        } else {
+            i += 1;
+        }
     }
+}
+
+pub fn clear_room(self: *Self) void {
+    self.level.clear_room(self.player_pos.x, self.player_pos.y);
 }
 
 fn move_player(
