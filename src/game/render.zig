@@ -230,7 +230,7 @@ fn render_entities(game: *const Game, camera: Camera, z_buffer: []f32) void {
     // Rendering them in this order makes them overlap correctly.
     const lessThanFn = struct {
         pub fn lessThanFn(_: void, a: entity.Entity, b: entity.Entity) bool {
-            return a.distance < b.distance;
+            return a.distance > b.distance;
         }
     }.lessThanFn;
     std.sort.block(entity.Entity, game.entities.items, {}, lessThanFn);

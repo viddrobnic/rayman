@@ -2,7 +2,9 @@ const std = @import("std");
 
 const assets = @import("../assets/assets.zig");
 const level = @import("level.zig");
+const items = @import("../entity/items.zig");
 const entity = @import("../entity/entity.zig");
+
 const Vec = @import("../vec.zig").Vec;
 
 pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Entity), rand: std.Random) !void {
@@ -13,7 +15,7 @@ pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Enti
             .y = @as(f32, @floatFromInt(rand.intRangeLessThan(u32, room.start_y, room.start_y + room.height))) + 0.5,
         };
 
-        const ent = entity.new_item(.coin, position, @floatFromInt(i), null);
+        const ent = items.new(.coin, position, @floatFromInt(i));
         try entities.append(ent);
     }
 
@@ -21,6 +23,6 @@ pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Enti
         .x = @as(f32, @floatFromInt(rand.intRangeLessThan(u32, room.start_x, room.start_x + room.width))) + 0.5,
         .y = @as(f32, @floatFromInt(rand.intRangeLessThan(u32, room.start_y, room.start_y + room.height))) + 0.5,
     };
-    const key = entity.new_item(.key, position, 0, null);
+    const key = items.new(.key, position, 0);
     try entities.append(key);
 }
