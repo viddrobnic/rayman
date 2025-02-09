@@ -36,6 +36,10 @@ pub fn build(b: *std.Build) void {
             .input = "assets/coin.png",
             .output = "coin",
         },
+        .{
+            .input = "assets/key.png",
+            .output = "key",
+        },
     };
     var asset_outputs: [assets.len]std.Build.LazyPath = undefined;
 

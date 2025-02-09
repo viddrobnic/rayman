@@ -42,7 +42,7 @@ pub fn new(
 ) Entity {
     const texture = switch (item_type) {
         .coin => &assets.gold,
-        .key => &assets.door,
+        .key => &assets.key,
     };
 
     return .{
