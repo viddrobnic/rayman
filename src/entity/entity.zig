@@ -5,6 +5,7 @@ const assets = @import("../assets/assets.zig");
 const Vec = @import("../vec.zig").Vec;
 const Game = @import("../game/game.zig");
 const ItemData = @import("items.zig").Data;
+const MonsterData = @import("monsters.zig").Data;
 
 pub const Entity = struct {
     position: Vec(f32),
@@ -24,4 +25,5 @@ pub const Entity = struct {
 
 const EntityData = union {
     item: ItemData,
+    monster: MonsterData,
 };

@@ -27,6 +27,11 @@ pub fn Vec(comptime T: type) type {
             return self.x * self.x + self.y * self.y;
         }
 
+        pub fn normalize(self: *const Self) Self {
+            const fact = 1.0 / self.length();
+            return self.scalar_mul(fact);
+        }
+
         pub fn add(self: *const Self, other: *const Self) Self {
             return .{
                 .x = self.x + other.x,
