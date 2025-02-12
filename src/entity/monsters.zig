@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const assets = @import("../assets/assets.zig");
 const level = @import("../level/level.zig");
 
@@ -16,7 +18,7 @@ pub const Data = struct {
 
 fn update_bat(ent: *Entity, game: *Game) bool {
     // Set texture
-    const time: usize = @intFromFloat(game.time * 7.0 + ent.data.monster.offset_time);
+    const time: usize = @intFromFloat(game.time * 5.0 + ent.data.monster.offset_time);
     switch (time % 4) {
         0 => ent.texture = &assets.bat1,
         1 => ent.texture = &assets.bat2,
@@ -24,6 +26,11 @@ fn update_bat(ent: *Entity, game: *Game) bool {
         3 => ent.texture = &assets.bat4,
         else => unreachable,
     }
+
+    // Set height
+    const height_param = @as(f32, @floatFromInt(time)) / 4.0 * 2.0 * std.math.pi; // [0, 2pi]
+    const height = (@sin(height_param) + 1.0) / 10.0;
+    ent.floor_offset = 0.7 - height;
 
     // Check if we have to move
     const player_pos = game.player_pos;
