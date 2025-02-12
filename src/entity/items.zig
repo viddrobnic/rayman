@@ -50,6 +50,7 @@ pub fn new(
         .size = Vec(f32){ .x = 0.2, .y = 0.2 },
         .floor_offset = 0.2,
         .texture = texture,
+        .kind = .item,
         .data = .{ .item = .{
             .offset_time = offset_time,
         } },

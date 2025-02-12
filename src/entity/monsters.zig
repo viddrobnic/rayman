@@ -40,8 +40,24 @@ fn update_bat(ent: *Entity, game: *Game) bool {
 
     const dir = player_pos.sub(&ent.position).normalize();
     const diff = dir.scalar_mul(dt * 1.0); // 1.0 is speed
-    ent.position = ent.position.add(&diff);
+    const new_pos = ent.position.add(&diff);
 
+    for (game.entities.items) |e| {
+        if (e.kind != .monster) {
+            continue;
+        }
+
+        if (e.position.x == ent.position.x and e.position.y == ent.position.y) {
+            continue;
+        }
+
+        const dist = new_pos.sub(&e.position).length_squared();
+        if (dist < 0.25) {
+            return false;
+        }
+    }
+
+    ent.position = new_pos;
     return false;
 }
 
@@ -51,6 +67,7 @@ pub fn new_bat(position: Vec(f32), offset_time: f32, room: *level.Room) Entity {
         .size = .{ .x = 0.7, .y = 0.7 },
         .floor_offset = 0.6,
         .texture = &assets.bat1,
+        .kind = .monster,
         .data = .{ .monster = .{
             .offset_time = offset_time,
             .room = room,

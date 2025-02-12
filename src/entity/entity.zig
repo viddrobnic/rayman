@@ -13,6 +13,7 @@ pub const Entity = struct {
     floor_offset: f32,
     texture: *const image.Image,
 
+    kind: Kind,
     data: EntityData,
 
     // Function called for every update. Return true if entity should be removed
@@ -23,7 +24,12 @@ pub const Entity = struct {
     distance: f32 = undefined,
 };
 
-const EntityData = union {
+const Kind = enum {
+    item,
+    monster,
+};
+
+const EntityData = union(Kind) {
     item: ItemData,
     monster: MonsterData,
 };
