@@ -49,6 +49,11 @@ fn update_bat(ent: *Entity, game: *Game) bool {
     const diff = dir.scalar_mul(dt * 1.0); // 1.0 is speed
     const new_pos = ent.position.add(&diff);
 
+    var dist = new_pos.sub(&game.player_pos).length_squared();
+    if (dist < 0.25) {
+        return false;
+    }
+
     for (game.entities.items) |e| {
         if (e.kind != .monster) {
             continue;
@@ -58,7 +63,7 @@ fn update_bat(ent: *Entity, game: *Game) bool {
             continue;
         }
 
-        const dist = new_pos.sub(&e.position).length_squared();
+        dist = new_pos.sub(&e.position).length_squared();
         if (dist < 0.25) {
             return false;
         }
