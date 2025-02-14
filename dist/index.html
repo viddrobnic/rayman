@@ -1,68 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+    <!-- This is very basic styling of the canvas. -->
+    <!-- Since html, css and js were not the focus of this project, they are very jank... -->
 
-<!-- This is very basic styling of the canvas. -->
-<!-- Since html, css and js were not the focus of this project, they are very jank... -->
+    <head>
+        <meta charset="utf-8" />
+        <title>RayMan</title>
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" />
 
-<head>
-    <meta charset="utf-8">
-    <title>RayMan</title>
-    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <style>
+            html,
+            body {
+                background-color: #2d2d2d;
+                margin: 0;
+                padding: 0;
+                height: 100%;
+            }
 
-    <style>
-        html,
-        body {
-            background-color: #2d2d2d;
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
+            .canvas-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 100%%;
+                height: 100%;
+                row-gap: 8px;
+            }
 
-        .canvas-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%%;
-            height: 100%;
-            row-gap: 8px;
-        }
+            .source {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
 
+                font-size: 1.2em;
+                color: gray;
+                font-family: sans-serif;
+                /* A little bit of jank never hurt anyone... */
+                max-width: calc(1280px + 32px);
+                width: 100%;
+            }
 
-        .source {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
+            a {
+                color: #3b82f6;
+            }
+        </style>
+    </head>
 
-            font-size: 1.2em;
-            color: gray;
-            font-family: sans-serif;
-            /* A little bit of jank never hurt anyone... */
-            max-width: calc(1280px + 32px);
-            width: 100%;
-        }
-
-        a {
-            color: #3b82f6;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="canvas-container">
-        <canvas id="game-canvas"></canvas>
-        <div class="source">
-            <!-- Inline styles, as before: a little bit of jank never hurt anyone... -->
-            <div style="padding-left: 16px;">Controls: WASD</div>
-            <div style="padding-right: 16px;">Source code available at <a href="https://github.com/viddrobnic/rayman"
-                    target="_blank">GitHub</a>
+    <body>
+        <div class="canvas-container">
+            <canvas id="game-canvas"></canvas>
+            <div class="source">
+                <!-- Inline styles, as before: a little bit of jank never hurt anyone... -->
+                <div style="padding-left: 16px">Controls: WASD &lt;space&gt;</div>
+                <div style="padding-right: 16px">
+                    Source code available at
+                    <a href="https://github.com/viddrobnic/rayman" target="_blank">GitHub</a>
+                </div>
             </div>
         </div>
-    </div>
-    <script type="module">
-        import {main} from './main.js';
-        main();
-    </script>
-</body>
-
+        <script type="module">
+            import { main } from "./main.js";
+            main();
+        </script>
+    </body>
 </html>

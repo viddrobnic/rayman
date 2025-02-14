@@ -1,6 +1,6 @@
 # RayMan
 
-Simple web game done using a custom raycasting engine.
+Simple rogue-like web game using a custom raycasting engine.
 
 ## Building and Running
 
@@ -14,7 +14,7 @@ Simple web game done using a custom raycasting engine.
    cd dist
    python3 -m http.server
    ```
-3. Open the game at `localhot:8000`
+3. Open the game at `localhost:8000`
 
 ## License
 
