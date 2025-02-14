@@ -15,13 +15,12 @@ player_pos: Vec,
 player_rot: f32,
 
 coins: u16 = 0,
+health: u8 = 100,
 
 level: levels.Level,
 entities: std.ArrayList(entity.Entity),
 
 time: f32 = 0.0,
-
-show_help_msg: bool = true,
 
 const Self = @This();
 
@@ -52,8 +51,10 @@ pub fn update(
     _: bool,
 ) void {
     self.time += dt;
-    if (self.time >= 5.0) {
-        self.show_help_msg = false;
+
+    // If player is dead, do nothing
+    if (self.health <= 0) {
+        return;
     }
 
     // Rotate the player

@@ -31,9 +31,8 @@ pub fn render(game: *const Game) void {
     render_walls(game, camera, &z_buffer);
     render_entities(game, camera, &z_buffer);
 
-    if (game.show_help_msg) {
-        text.render_text("You need a key", .{ .x = 0.3, .y = 0.45 }, 0.05);
-        text.render_text("to open the doors", .{ .x = 0.28, .y = 0.51 }, 0.05);
+    if (game.health <= 0) {
+        text.render_text("Game Over", .{ .x = 0.3, .y = 0.45 }, 0.1);
     }
 }
 

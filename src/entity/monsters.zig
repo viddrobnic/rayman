@@ -7,6 +7,10 @@ const Entity = @import("entity.zig").Entity;
 const Vec = @import("../vec.zig").Vec;
 const Game = @import("../game/game.zig");
 
+const MIN_DISTANCE = 0.4 * 0.4;
+const HIT_DISTANCE = 0.5 * 0.5;
+const HIT_COOLDOWN = 1.0;
+
 pub const Data = struct {
     // Random time offset. Used so that animations
     // are not synchronized.
@@ -14,6 +18,7 @@ pub const Data = struct {
     room: *level.Room,
 
     prev_time: f32 = 0.0,
+    last_hit_time: f32 = -1.0,
 };
 
 fn update_bat(ent: *Entity, game: *Game) bool {
@@ -32,7 +37,11 @@ fn update_bat(ent: *Entity, game: *Game) bool {
     const height = (@sin(height_param) + 1.0) / 10.0;
     ent.floor_offset = 0.7 - height;
 
-    // Check if we have to move
+    // Update monster time
+    const dt = game.time - ent.data.monster.prev_time;
+    ent.data.monster.prev_time = game.time;
+
+    // Check if we are in the same room as the player
     const player_pos = game.player_pos;
     const room = ent.data.monster.room;
     if (player_pos.x < @as(f32, @floatFromInt(room.start_x)) or player_pos.x >= @as(f32, @floatFromInt(room.start_x + room.width))) {
@@ -42,15 +51,21 @@ fn update_bat(ent: *Entity, game: *Game) bool {
         return false;
     }
 
-    const dt = game.time - ent.data.monster.prev_time;
-    ent.data.monster.prev_time = game.time;
+    // Handle hitting player
+    var dist = ent.position.sub(&game.player_pos).length_squared();
+    const hit_time_diff = game.time - ent.data.monster.last_hit_time;
+    if (dist < HIT_DISTANCE and hit_time_diff > HIT_COOLDOWN) {
+        ent.data.monster.last_hit_time = game.time;
+        game.health -= 5;
+    }
 
+    // Move the monster
     const dir = player_pos.sub(&ent.position).normalize();
     const diff = dir.scalar_mul(dt * 1.0); // 1.0 is speed
     const new_pos = ent.position.add(&diff);
 
-    var dist = new_pos.sub(&game.player_pos).length_squared();
-    if (dist < 0.25) {
+    dist = new_pos.sub(&game.player_pos).length_squared();
+    if (dist < MIN_DISTANCE) {
         return false;
     }
 
@@ -64,7 +79,7 @@ fn update_bat(ent: *Entity, game: *Game) bool {
         }
 
         dist = new_pos.sub(&e.position).length_squared();
-        if (dist < 0.25) {
+        if (dist < MIN_DISTANCE) {
             return false;
         }
     }
