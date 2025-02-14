@@ -28,6 +28,7 @@ pub const Room = struct {
     width: usize,
     height: usize,
 
+    nr_monsters: u8 = 0,
     cleared: bool = false,
 
     // Doors that have to be removed when the room is cleared.

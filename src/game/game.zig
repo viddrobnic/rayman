@@ -2,6 +2,7 @@ const std = @import("std");
 
 const levels = @import("../level/level.zig");
 const entity = @import("../entity/entity.zig");
+const items = @import("../entity/items.zig");
 
 const vec_from_polar = @import("../vec.zig").from_polar;
 const Vec = @import("../vec.zig").Vec(f32);
@@ -128,8 +129,15 @@ fn attack(self: *Self) void {
         ent.data.monster.health -= ATTACK_DAMAGE;
         ent.data.monster.last_hit_time = self.time;
         if (ent.data.monster.health <= 0) {
-            self.entities.items[i] = self.entities.items[self.entities.items.len - 1];
-            _ = self.entities.pop();
+            ent.data.monster.room.nr_monsters -= 1;
+            const drop_key = ent.data.monster.room.nr_monsters == 0;
+            if (drop_key) {
+                const key = items.new(.key, ent.position, 0);
+                self.entities.items[i] = key;
+            } else {
+                self.entities.items[i] = self.entities.items[self.entities.items.len - 1];
+                _ = self.entities.pop();
+            }
         }
 
         // Only one monster can be attacked at a time

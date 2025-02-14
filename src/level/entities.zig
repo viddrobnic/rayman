@@ -19,17 +19,12 @@ pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Enti
 
     // Generate monsters
     const nr_monsters = rand.intRangeLessThan(u8, 3, 10);
+    room.nr_monsters = nr_monsters;
     for (0..nr_monsters) |i| {
         const position = rand_position(room, rand);
         const ent = monsters.new_bat(position, @floatFromInt(i), room);
         try entities.append(ent);
     }
-
-    // Generate key
-    // TODO: Remove this
-    const position = rand_position(room, rand);
-    const key = items.new(.key, position, 0);
-    try entities.append(key);
 }
 
 fn rand_position(room: *const level.Room, rand: std.Random) Vec(f32) {
