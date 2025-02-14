@@ -8,8 +8,11 @@ const Vec = @import("../vec.zig").Vec;
 const Game = @import("../game/game.zig");
 
 const MIN_DISTANCE = 0.4 * 0.4;
-const HIT_DISTANCE = 0.5 * 0.5;
-const HIT_COOLDOWN = 1.0;
+const ATTACK_DISTANCE = 0.5 * 0.5;
+const ATTACK_COOLDOWN = 1.0;
+// The amount of time monster travels away from the player
+// after the monster was hit by the player.
+const HIT_COOLDOWN = 0.5;
 
 pub const Data = struct {
     // Random time offset. Used so that animations
@@ -18,7 +21,10 @@ pub const Data = struct {
     room: *level.Room,
 
     prev_time: f32 = 0.0,
+    last_attack_time: f32 = -1.0,
     last_hit_time: f32 = -1.0,
+
+    health: i8 = 10,
 };
 
 fn update_bat(ent: *Entity, game: *Game) bool {
@@ -53,15 +59,21 @@ fn update_bat(ent: *Entity, game: *Game) bool {
 
     // Handle hitting player
     var dist = ent.position.sub(&game.player_pos).length_squared();
-    const hit_time_diff = game.time - ent.data.monster.last_hit_time;
-    if (dist < HIT_DISTANCE and hit_time_diff > HIT_COOLDOWN) {
-        ent.data.monster.last_hit_time = game.time;
+    const hit_time_diff = game.time - ent.data.monster.last_attack_time;
+    if (dist < ATTACK_DISTANCE and hit_time_diff > ATTACK_COOLDOWN) {
+        ent.data.monster.last_attack_time = game.time;
         game.health -= 5;
     }
 
     // Move the monster
     const dir = player_pos.sub(&ent.position).normalize();
     const diff = dir.scalar_mul(dt * 1.0); // 1.0 is speed
+
+    if (game.time - ent.data.monster.last_hit_time < HIT_COOLDOWN) {
+        ent.position = ent.position.sub(&diff);
+        return false;
+    }
+
     const new_pos = ent.position.add(&diff);
 
     dist = new_pos.sub(&game.player_pos).length_squared();

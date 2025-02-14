@@ -9,16 +9,23 @@ const Vec = @import("../vec.zig").Vec(f32);
 const SPEED = 1.8;
 const ROTATION_SPEED = 1.8;
 
+const ATTACK_DISTANCE = 0.7 * 0.7;
+const ATTACK_DAMAGE = 4;
+const ATTACK_COOLDOWN = 0.7;
+const ATTACK_ANGLE = @cos(std.math.pi / 6.0);
+
 const PLAYER_BOUND_MARGIN = 0.1;
 
 player_pos: Vec,
 player_rot: f32,
 
 coins: u16 = 0,
-health: u8 = 100,
+health: i16 = 100,
 
 level: levels.Level,
 entities: std.ArrayList(entity.Entity),
+
+last_attack_time: f32 = -1.0,
 
 time: f32 = 0.0,
 
@@ -48,7 +55,7 @@ pub fn update(
     a_pressed: bool,
     s_pressed: bool,
     d_pressed: bool,
-    _: bool,
+    space_pressed: bool,
 ) void {
     self.time += dt;
 
@@ -68,6 +75,11 @@ pub fn update(
     // Move the player
     self.move_player(dt, w_pressed, s_pressed);
 
+    // Handle attack
+    if (space_pressed) {
+        self.attack();
+    }
+
     // Update entities.
     var i: usize = 0;
     while (i < self.entities.items.len) {
@@ -84,6 +96,45 @@ pub fn update(
 
 pub fn clear_room(self: *Self) void {
     self.level.clear_room(self.player_pos.x, self.player_pos.y);
+}
+
+fn attack(self: *Self) void {
+    if (self.time - self.last_attack_time < ATTACK_COOLDOWN) {
+        return;
+    }
+    self.last_attack_time = self.time;
+
+    const direction = vec_from_polar(self.player_rot);
+
+    var i: usize = 0;
+    while (i < self.entities.items.len) : (i += 1) {
+        const ent = &self.entities.items[i];
+        if (ent.kind != .monster) {
+            continue;
+        }
+
+        var vec = ent.position.sub(&self.player_pos);
+        const dist_sq = vec.length_squared();
+        if (dist_sq > ATTACK_DISTANCE) {
+            continue;
+        }
+
+        vec = vec.normalize();
+        const angle = vec.dot(&direction);
+        if (angle < ATTACK_ANGLE) {
+            continue;
+        }
+
+        ent.data.monster.health -= ATTACK_DAMAGE;
+        ent.data.monster.last_hit_time = self.time;
+        if (ent.data.monster.health <= 0) {
+            self.entities.items[i] = self.entities.items[self.entities.items.len - 1];
+            _ = self.entities.pop();
+        }
+
+        // Only one monster can be attacked at a time
+        return;
+    }
 }
 
 fn move_player(

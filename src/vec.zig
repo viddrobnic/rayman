@@ -45,6 +45,10 @@ pub fn Vec(comptime T: type) type {
                 .y = self.y - other.y,
             };
         }
+
+        pub fn dot(self: *const Self, other: *const Self) T {
+            return self.x * other.x + self.y * other.y;
+        }
     };
 }
 
