@@ -25,7 +25,10 @@ fn update_item(comptime item_type: Type) fn (*Entity, *Game) bool {
             if (dist < 0.2) {
                 switch (item_type) {
                     .coin => game.coins += 1,
-                    .key => game.clear_room(),
+                    .key => {
+                        game.clear_room();
+                        game.rooms_cleared += 1;
+                    },
                 }
                 return true;
             }

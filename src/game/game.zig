@@ -25,6 +25,7 @@ health: i16 = 100,
 
 level: levels.Level,
 entities: std.ArrayList(entity.Entity),
+rooms_cleared: u8 = 0,
 
 last_attack_time: f32 = -1.0,
 

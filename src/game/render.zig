@@ -30,6 +30,7 @@ pub fn render(game: *const Game) void {
     render_floor_ceil(game, camera);
     render_walls(game, camera, &z_buffer);
     render_entities(game, camera, &z_buffer);
+    render_hud(game) catch {};
 
     if (game.health <= 0) {
         text.render_text("Game Over", .{ .x = 0.3, .y = 0.45 }, 0.1);
@@ -211,6 +212,27 @@ fn render_walls(game: *const Game, camera: Camera, z_buffer: []f32) void {
 
         draw_wall_column(x, wall_texture, texture_x, hit_direction, distance);
     }
+}
+
+fn render_hud(game: *const Game) !void {
+    var buffer: [256]u8 = undefined;
+    var fb_allocator = std.heap.FixedBufferAllocator.init(&buffer);
+    const allocator = fb_allocator.allocator();
+    var data = std.ArrayList(u8).init(allocator);
+
+    // Render coins
+    try std.fmt.format(data.writer(), "Coins: {d}", .{game.coins});
+    text.render_text(data.items, .{ .x = 0.01, .y = 0.95 }, 0.03);
+
+    // Render health
+    data.clearRetainingCapacity();
+    try std.fmt.format(data.writer(), "Health: {d}%", .{game.health});
+    text.render_text(data.items, .{ .x = 0.4, .y = 0.95 }, 0.03);
+
+    // Render cleared rooms
+    data.clearRetainingCapacity();
+    try std.fmt.format(data.writer(), "Rooms Cleared: {d}/9", .{game.rooms_cleared});
+    text.render_text(data.items, .{ .x = 0.65, .y = 0.95 }, 0.03);
 }
 
 fn render_entities(game: *const Game, camera: Camera, z_buffer: []f32) void {
