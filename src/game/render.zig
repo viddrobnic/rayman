@@ -35,6 +35,10 @@ pub fn render(game: *const Game) void {
     if (game.health <= 0) {
         text.render_text("Game Over", .{ .x = 0.3, .y = 0.45 }, 0.1);
     }
+
+    if (game.rooms_cleared >= 9) {
+        text.render_text("You Won!", .{ .x = 0.3, .y = 0.45 }, 0.1);
+    }
 }
 
 fn render_floor_ceil(game: *const Game, camera: Camera) void {

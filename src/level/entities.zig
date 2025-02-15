@@ -10,7 +10,7 @@ const Vec = @import("../vec.zig").Vec;
 
 pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Entity), rand: std.Random) !void {
     // Generate gold
-    const nr_gold = rand.intRangeLessThan(u8, 1, 5);
+    const nr_gold = rand.intRangeLessThan(u8, 3, 10);
     for (0..nr_gold) |i| {
         const position = rand_position(room, rand);
         const ent = items.new(.coin, position, @floatFromInt(i));
@@ -18,7 +18,7 @@ pub fn generate_entities(room: *level.Room, entities: *std.ArrayList(entity.Enti
     }
 
     // Generate monsters
-    const nr_monsters = rand.intRangeLessThan(u8, 3, 10);
+    const nr_monsters = rand.intRangeLessThan(u8, 3, 7);
     room.nr_monsters = nr_monsters;
     for (0..nr_monsters) |i| {
         const position = rand_position(room, rand);

@@ -10,9 +10,9 @@ const Vec = @import("../vec.zig").Vec(f32);
 const SPEED = 1.8;
 const ROTATION_SPEED = 1.8;
 
-const ATTACK_DISTANCE = 0.7 * 0.7;
+const ATTACK_DISTANCE = 1.0 * 1.0;
 const ATTACK_DAMAGE = 4;
-const ATTACK_COOLDOWN = 0.7;
+const ATTACK_COOLDOWN = 0.5;
 const ATTACK_ANGLE = @cos(std.math.pi / 6.0);
 
 const PLAYER_BOUND_MARGIN = 0.1;
@@ -66,6 +66,11 @@ pub fn update(
         return;
     }
 
+    // If player won, do nothing
+    if (self.rooms_cleared >= 9) {
+        return;
+    }
+
     // Rotate the player
     if (a_pressed) {
         self.player_rot += ROTATION_SPEED * dt;
@@ -93,6 +98,12 @@ pub fn update(
         } else {
             i += 1;
         }
+    }
+
+    // Update gold
+    while (self.coins >= 10) {
+        self.coins -= 10;
+        self.health += 5;
     }
 }
 
