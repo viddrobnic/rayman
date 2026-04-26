@@ -3,4 +3,6 @@
 /dist/rayman.wasm
 /zig-out
 .zig-cache
+/.direnv
+/result
 

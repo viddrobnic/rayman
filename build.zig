@@ -16,6 +16,7 @@ pub fn build(b: *std.Build) void {
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/asset_pack/main.zig"),
             .target = b.resolveTargetQuery(.{}),
+            .link_libc = true,
         }),
     });
     asset_pack.addCSourceFile(.{
