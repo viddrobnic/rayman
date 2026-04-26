@@ -4,17 +4,17 @@ Simple rogue-like web game using a custom raycasting engine.
 
 ## Building and Running
 
-1. Build the `wasm` and move it to correct place:
-   ```sh
-   zig build
-   cp zig-out/bin/rayman.wasm dist/
-   ```
-2. Run a local server with:
-   ```sh
-   cd dist
-   python3 -m http.server
-   ```
-3. Open the game at `localhost:8000`
+The easiest way to build the thing is with nix:
+
+```sh
+nix build
+```
+
+You can also serve the game on `localhost:8000` by doing
+
+```sh
+nix run
+```
 
 ## License
 
