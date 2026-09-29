@@ -8,7 +8,6 @@
 
   outputs =
     inputs@{
-      self,
       flake-parts,
       ...
     }:
@@ -20,7 +19,7 @@
       ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, config, ... }:
         let
           inherit (pkgs) lib;
 
@@ -77,9 +76,8 @@
           apps.default =
             let
               serve = pkgs.writeShellScript "serve" ''
-                out="$(nix build ${self}#default --no-link --print-out-paths)"
                 echo "Listening on :8000"
-                ${pkgs.static-web-server}/bin/static-web-server -p 8000 -d $out
+                ${pkgs.static-web-server}/bin/static-web-server -p 8000 -d ${config.packages.default}
               '';
             in
             {
